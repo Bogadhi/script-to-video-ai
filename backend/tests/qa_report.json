@@ -1,0 +1,170 @@
+{
+  "timestamp": "2026-03-13T23:10:07.841275",
+  "environment": {
+    "backend": "UP",
+    "docs": "UP",
+    "frontend": "UP",
+    "redis": "UP",
+    "celery_broker": "ACCESSIBLE",
+    "celery_tasks": "REGISTERED",
+    "ffmpeg": "MISSING"
+  },
+  "structure": {
+    "services": "EXISTS",
+    "workers": "EXISTS",
+    "models": "EXISTS",
+    "routers": "EXISTS",
+    "tests": "EXISTS",
+    "main.py": "OK (3516b)",
+    "requirements.txt": "OK (804b)",
+    ".env": "OK (901b)",
+    "db.py": "OK (3379b)",
+    "scene_analyzer.py": "OK (3303b)",
+    "voiceover.py": "OK (3306b)",
+    "image_gen.py": "OK (2996b)",
+    "video_builder.py": "OK (5026b)",
+    "music_engine.py": "OK (2018b)",
+    "subtitle_gen.py": "OK (5882b)",
+    "thumbnail_gen.py": "OK (4661b)",
+    "metadata_gen.py": "OK (2542b)",
+    "youtube_upload.py": "OK (3734b)",
+    "pipeline_worker.py": "OK (11527b)",
+    "scripts.py": "OK (4079b)",
+    "pipeline.py": "OK (6159b)",
+    "youtube.py": "OK (1920b)",
+    "music_inspirational": "MISSING",
+    "music_cinematic": "MISSING",
+    "music_educational": "MISSING",
+    "music_suspense": "MISSING"
+  },
+  "api_endpoints": {
+    "upload": {
+      "status": "PASS",
+      "project_id": "ce66c967-263e-4c98-bf91-7bd5ef125090",
+      "ms": 2067
+    },
+    "get_project": {
+      "status": "PASS",
+      "steps_count": 9,
+      "ms": 2042
+    },
+    "pipeline_status": {
+      "status": "PASS",
+      "overall": "pending",
+      "ms": 2020
+    },
+    "sse_stream": {
+      "status": "PASS",
+      "ms": 2035
+    },
+    "metadata_precheck": {
+      "status": "PASS"
+    },
+    "youtube_guard": {
+      "status": "PASS"
+    }
+  },
+  "pipeline": {
+    "scene_analyzer": {
+      "status": "PASS",
+      "scenes": 2,
+      "path": "C:\\Users\\bogad\\.gemini\\antigravity\\scratch\\video-automation\\backend\\projects\\qa_test_run\\scenes\\scene_data.json"
+    },
+    "music_engine": {
+      "status": "WARN",
+      "mood": "mysterious",
+      "track": null
+    },
+    "video_builder": {
+      "status": "FAIL",
+      "error": "FFmpeg missing"
+    },
+    "video_assembly": {
+      "status": "SKIP"
+    },
+    "thumbnail": {
+      "status": "SKIP"
+    },
+    "subtitles": {
+      "status": "PASS",
+      "blocks": 2,
+      "path": "C:\\Users\\bogad\\.gemini\\antigravity\\scratch\\video-automation\\backend\\projects\\qa_test_run\\subtitles\\subtitles.srt"
+    },
+    "metadata": {
+      "status": "PASS",
+      "path": "C:\\Users\\bogad\\.gemini\\antigravity\\scratch\\video-automation\\backend\\projects\\qa_test_run\\metadata\\youtube.json",
+      "title": "The Beach That Glows at Night | Maldives Biolumine"
+    },
+    "voiceover": {
+      "status": "PASS",
+      "openai_key_set": false
+    },
+    "image_gen": {
+      "status": "PASS",
+      "openai_key_set": false
+    }
+  },
+  "output_validation": {
+    "final_video": {
+      "status": "SKIP"
+    },
+    "thumbnail": {
+      "status": "SKIP"
+    },
+    "subtitles": {
+      "status": "PASS",
+      "blocks": 2
+    },
+    "metadata": {
+      "status": "PASS",
+      "title": "The Beach That Glows at Night | Maldives Bioluminescence Mys"
+    }
+  },
+  "frontend": {
+    "main_page": "PASS",
+    "pipeline_steps": "PASS",
+    "preview_page": "PASS"
+  },
+  "youtube_safe_mode": {
+    "oauth_configured": false,
+    "status": "SKIP \u2014 credentials not set"
+  },
+  "performance": {
+    "step_timings_ms": {
+      "scene_save": 1,
+      "metadata": 10
+    },
+    "api_health_avg_ms": 2053,
+    "api_health_samples": [
+      2051,
+      2074,
+      2047,
+      2052,
+      2040
+    ],
+    "total_mocked_steps_ms": 11
+  },
+  "errors": [
+    {
+      "test": "FFmpeg not found in PATH \u2014 video building will fail!",
+      "details": ""
+    },
+    {
+      "test": "Video Builder: FFmpeg not in PATH \u2014 install FFmpeg and retry",
+      "details": ""
+    },
+    {
+      "test": "Env var OPENAI_API_KEY: NOT SET \u2014 Required for scene breakdown, images, TTS, subtitles, metadata",
+      "details": ""
+    }
+  ],
+  "fixes_applied": [],
+  "overall": "PARTIAL",
+  "summary": {
+    "passed": 59,
+    "failed": 3,
+    "warnings": 12,
+    "pass_rate": "95%",
+    "overall": "PARTIAL"
+  }
+}

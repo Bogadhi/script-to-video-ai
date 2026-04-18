@@ -1,0 +1,75 @@
+[2026-03-24 22:36:35,358: WARNING/MainProcess] C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\venv\lib\site-packages\celery\worker\consumer\consumer.py:508: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2026-03-24 22:36:35,368: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-03-24 22:36:35,369: WARNING/MainProcess] C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\venv\lib\site-packages\celery\worker\consumer\consumer.py:508: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2026-03-24 22:36:35,372: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-24 22:36:36,407: INFO/MainProcess] mingle: all alone
+[2026-03-24 22:36:36,442: INFO/MainProcess] celery@pandabear ready.
+[2026-03-24 22:36:55,763: INFO/MainProcess] Task workers.pipeline_worker.run_full_pipeline[e3291dd5-261d-4008-be56-72bed61e6309] received
+[2026-03-24 22:36:55,813: INFO/MainProcess] [scene_breakdown] START
+[2026-03-24 22:36:58,364: INFO/MainProcess] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+[2026-03-24 22:36:58,366: INFO/MainProcess] Retrying request to /chat/completions in 0.986463 seconds
+[2026-03-24 22:36:59,703: INFO/MainProcess] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+[2026-03-24 22:36:59,704: INFO/MainProcess] Retrying request to /chat/completions in 1.909895 seconds
+[2026-03-24 22:37:02,368: INFO/MainProcess] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+[2026-03-24 22:37:02,370: WARNING/MainProcess] [scene_breakdown] LLM failed, fallback to rule-based: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+[2026-03-24 22:37:02,379: INFO/MainProcess] [voice_generation] START
+[2026-03-24 22:37:03,615: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 1
+[2026-03-24 22:37:04,982: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 2
+[2026-03-24 22:37:06,479: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 3
+[2026-03-24 22:37:07,839: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 4
+[2026-03-24 22:37:08,285: INFO/MainProcess] [visual_selection] START — 4 scenes
+[2026-03-24 22:37:08,286: INFO/MainProcess] [visual_selection] Scene 1 Initial Query: 'majestic mountains stand cinematic footage 4k'
+[2026-03-24 22:37:09,264: INFO/MainProcess] [pexels_video] Query: 'majestic mountains stand cinematic footage 4k' | Response Count: 3
+[2026-03-24 22:38:04,276: INFO/MainProcess] [validation] raw_scene_001.mp4: codec=h264, 3840x2160, size=52115499
+[2026-03-24 22:38:04,281: INFO/MainProcess] [visual_selection] Normalizing asset for scene 1: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\a5f2c37c-4402-475b-b10f-f91befda0b89\assets\raw_scene_001.mp4
+[2026-03-24 22:38:06,901: INFO/MainProcess] [validation] clip_001.mp4: codec=h264, 1920x1080, size=816670
+[2026-03-24 22:38:06,902: INFO/MainProcess] [visual_selection] Scene 2 Initial Query: 'river flows gently cinematic footage 4k'
+[2026-03-24 22:38:07,362: INFO/MainProcess] [pexels_video] Query: 'river flows gently cinematic footage 4k' | Response Count: 3
+[2026-03-24 22:38:30,847: INFO/MainProcess] [validation] raw_scene_002.mp4: codec=h264, 1920x1080, size=23354366
+[2026-03-24 22:38:30,851: INFO/MainProcess] [visual_selection] Normalizing asset for scene 2: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\a5f2c37c-4402-475b-b10f-f91befda0b89\assets\raw_scene_002.mp4
+[2026-03-24 22:38:33,389: INFO/MainProcess] [validation] clip_002.mp4: codec=h264, 1920x1080, size=2670791
+[2026-03-24 22:38:33,390: INFO/MainProcess] [visual_selection] Scene 3 Initial Query: 'crystal blue cinematic footage 4k'
+[2026-03-24 22:38:33,817: INFO/MainProcess] [pexels_video] Query: 'crystal blue cinematic footage 4k' | Response Count: 3
+[2026-03-24 22:39:14,174: INFO/MainProcess] [validation] raw_scene_003.mp4: codec=h264, 3840x2160, size=44395267
+[2026-03-24 22:39:14,179: INFO/MainProcess] [visual_selection] Normalizing asset for scene 3: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\a5f2c37c-4402-475b-b10f-f91befda0b89\assets\raw_scene_003.mp4
+[2026-03-24 22:39:18,282: INFO/MainProcess] [validation] clip_003.mp4: codec=h264, 1920x1080, size=5490298
+[2026-03-24 22:39:18,284: INFO/MainProcess] [visual_selection] Scene 4 Initial Query: 'Nature provides endless cinematic footage 4k'
+[2026-03-24 22:39:18,670: INFO/MainProcess] [pexels_video] Query: 'Nature provides endless cinematic footage 4k' | Response Count: 3
+[2026-03-24 22:39:31,302: INFO/MainProcess] [validation] raw_scene_004.mp4: codec=h264, 3840x2160, size=15839064
+[2026-03-24 22:39:31,307: INFO/MainProcess] [visual_selection] Normalizing asset for scene 4: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\a5f2c37c-4402-475b-b10f-f91befda0b89\assets\raw_scene_004.mp4
+[2026-03-24 22:39:33,736: INFO/MainProcess] [validation] clip_004.mp4: codec=h264, 1920x1080, size=864229
+[2026-03-24 22:39:33,854: ERROR/MainProcess] [scene_assembly_1] FFmpeg failed: [mp3 @ 000001d7e3b00300] Estimating duration from bitrate, this may be inaccurate
+[fc#0 @ 000001d7e3394dc0] Stream specifier ':a' in filtergraph description [0:v]fade=t=in:st=0:d=0.5,fade=t=out:st=3.6:d=0.5[v];[1:a]copy[a] matches no streams.
+Error binding filtergraph inputs/outputs: Invalid argument
+
+[2026-03-24 22:39:33,861: ERROR/MainProcess] [pipeline] FAILED Scene assembly 1 failed
+[2026-03-24 22:39:33,868: ERROR/MainProcess] Task workers.pipeline_worker.run_full_pipeline[e3291dd5-261d-4008-be56-72bed61e6309] raised unexpected: RuntimeError('Scene assembly 1 failed')
+Traceback (most recent call last):
+  File "C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\pipeline_worker.py", line 578, in _step_scene_assembly
+    raise RuntimeError(f"Scene assembly {scene['index']} failed")
+RuntimeError: Scene assembly 1 failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\venv\lib\site-packages\celery\app\trace.py", line 453, in trace_task
+    R = retval = fun(*args, **kwargs)
+  File "C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\venv\lib\site-packages\celery\app\trace.py", line 736, in __protected_call__
+    return self.run(*args, **kwargs)
+  File "C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\pipeline_worker.py", line 118, in run_full_pipeline
+    raise e
+  File "C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\pipeline_worker.py", line 107, in run_full_pipeline
+    _step_scene_assembly(project_id, project_dir, scenes)
+  File "C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\pipeline_worker.py", line 587, in _step_scene_assembly
+    raise RuntimeError(str(exc))
+RuntimeError: Scene assembly 1 failed

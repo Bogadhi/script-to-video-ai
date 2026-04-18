@@ -1,0 +1,12 @@
+node_modules
+venv/
+backend/venv/
+__pycache__/
+.env
+dist/
+build/
+projects/
+*.mp4
+*.png
+*.jpg
+*.log

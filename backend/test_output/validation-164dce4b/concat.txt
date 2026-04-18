@@ -1,0 +1,3 @@
+file 'C:/Users/bogad/.gemini/antigravity/scratch/video-automation/backend/test_output/validation-164dce4b/assembled/scene_001.mp4'
+file 'C:/Users/bogad/.gemini/antigravity/scratch/video-automation/backend/test_output/validation-164dce4b/assembled/scene_002.mp4'
+file 'C:/Users/bogad/.gemini/antigravity/scratch/video-automation/backend/test_output/validation-164dce4b/assembled/scene_003.mp4'

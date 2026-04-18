@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  plan      String    @default("FREE")
+  credits   Int       @default(3)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  payments  Payment[]
+  projects  Project[]
+}
+
+model Payment {
+  id                  Int      @id @default(autoincrement())
+  userId              Int
+  razorpay_order_id   String   @unique
+  razorpay_payment_id String?
+  razorpay_signature  String?
+  amount              Int
+  plan                String
+  status              String   @default("PENDING")
+  createdAt           DateTime @default(now())
+  user                User     @relation(fields: [userId], references: [id])
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  projectName String   @unique
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}

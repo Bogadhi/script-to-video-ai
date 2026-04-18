@@ -1,0 +1,62 @@
+[
+  {
+    "scene": 1,
+    "scene_id": 1,
+    "text": "A cinematic video showing mountains, rivers, and sunrise",
+    "narration": "A cinematic video showing mountains, rivers, and sunrise",
+    "visual_prompt": "Ultra realistic cinematic landscape of mountain, river, sunrise, NO people, NO humans, NO portraits, environment: mountain landscape, lighting: golden sunrise, epic wide shot, aerial perspective, landscape photography, natural scenery, high detail, 4k, photorealistic, only nature elements, no artificial objects",
+    "keywords": [
+      "mountain",
+      "river",
+      "sunrise"
+    ],
+    "negative_prompt": "person, people, human, face, portrait, man, woman, camera, photographer, indoor, room, building, text, watermark, blurry, low quality, cartoon, anime, sketch, selfie, studio",
+    "camera_motion": "zoom_in",
+    "mood": "calm",
+    "lighting": "golden sunrise",
+    "style": "photorealistic, ultra detailed, 4k",
+    "composition": "epic wide shot, aerial perspective, landscape photography",
+    "continuity_hint": "LOCKED: mountain, river, sunrise. Same environment, same lighting. No new elements.",
+    "duration": 3.2
+  },
+  {
+    "scene": 2,
+    "scene_id": 2,
+    "text": "A cinematic video showing mountains, rivers, and sunrise",
+    "narration": "A cinematic video showing mountains, rivers, and sunrise",
+    "visual_prompt": "Ultra realistic cinematic landscape of mountain, river, sunrise, NO people, NO humans, NO portraits, environment: mountain landscape, lighting: golden sunrise, epic wide shot, aerial perspective, landscape photography, natural scenery, high detail, 4k, photorealistic, only nature elements, no artificial objects",
+    "keywords": [
+      "mountain",
+      "river",
+      "sunrise"
+    ],
+    "negative_prompt": "person, people, human, face, portrait, man, woman, camera, photographer, indoor, room, building, text, watermark, blurry, low quality, cartoon, anime, sketch, selfie, studio",
+    "camera_motion": "pan_right",
+    "mood": "epic",
+    "lighting": "golden sunrise",
+    "style": "photorealistic, ultra detailed, 4k",
+    "composition": "epic wide shot, aerial perspective, landscape photography",
+    "continuity_hint": "LOCKED: mountain, river, sunrise. Same environment, same lighting. No new elements.",
+    "duration": 3.2
+  },
+  {
+    "scene": 3,
+    "scene_id": 3,
+    "text": "A cinematic video showing mountains, rivers, and sunrise",
+    "narration": "A cinematic video showing mountains, rivers, and sunrise",
+    "visual_prompt": "Ultra realistic cinematic landscape of mountain, river, sunrise, NO people, NO humans, NO portraits, environment: mountain landscape, lighting: golden sunrise, epic wide shot, aerial perspective, landscape photography, natural scenery, high detail, 4k, photorealistic, only nature elements, no artificial objects",
+    "keywords": [
+      "mountain",
+      "river",
+      "sunrise"
+    ],
+    "negative_prompt": "person, people, human, face, portrait, man, woman, camera, photographer, indoor, room, building, text, watermark, blurry, low quality, cartoon, anime, sketch, selfie, studio",
+    "camera_motion": "static",
+    "mood": "mysterious",
+    "lighting": "golden sunrise",
+    "style": "photorealistic, ultra detailed, 4k",
+    "composition": "epic wide shot, aerial perspective, landscape photography",
+    "continuity_hint": "LOCKED: mountain, river, sunrise. Same environment, same lighting. No new elements.",
+    "duration": 3.2
+  }
+]

@@ -1,0 +1,68 @@
+﻿
+=================================================================
+  NVIDIA TTS ΓÇö STRICT VALIDATION
+  No fallback. No grace. Hard FAIL on any issue.
+=================================================================
+
+=================================================================
+  STEP 1 ΓÇö Load Environment Variables
+=================================================================
+  Γä╣∩╕Å   API_KEY : nvapi-cqyY_9**********************************************************
+  Γä╣∩╕Å   URL     : https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api
+
+=================================================================
+  STEP 2 ΓÇö API Key Format Validation
+=================================================================
+  Γ£à  Key format valid  (length=70, prefix=nvapi-)
+
+=================================================================
+  STEP 3 ΓÇö Direct NVIDIA API Call (NO pipeline, NO fallback)
+=================================================================
+  Γä╣∩╕Å   Endpoint : https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api
+  Γä╣∩╕Å   Voice    : Magpie-Multilingual.EN-US.Leo
+  Γä╣∩╕Å   Text     : This is a strict validation test for NVIDIA TTS. The audio m...
+  Γä╣∩╕Å   HTTP 404  |  latency=170ms  |  content-type=application/problem+json
+
+  Γ¥î  FAIL ΓÇö HTTP 404 Not Found ΓÇö endpoint URL is wrong: https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api
+
+=================================================================
+  VALIDATION REPORT
+=================================================================
+{
+    "api_key_status": {
+        "format_valid": true,
+        "starts_with_nvapi": true,
+        "length": 70,
+        "is_placeholder": false,
+        "min_length_satisfied": true
+    },
+    "api_response": {
+        "status_code": 404,
+        "content_type": "application/problem+json",
+        "latency_ms": 170,
+        "response_size": 34
+    },
+    "audio_validation": {},
+    "final_result": {
+        "nvidia_working": false,
+        "fallback_used": false,
+        "ready_for_production": false,
+        "failures": [
+            "HTTP 404 Not Found \u2014 endpoint URL is wrong: https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api"
+        ]
+    },
+    "error_report": {
+        "section": "api_call",
+        "exact_error": "HTTP 404 Not Found \u2014 endpoint URL is wrong: https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api",
+        "probable_cause": "The NIM function ID or path in NVIDIA_TTS_URL does not match any active deployment",
+        "fix_suggestion": "Visit https://build.nvidia.com/nvidia/tts and copy the exact endpoint URL from the 'API' tab"
+    }
+}
+
+=================================================================
+  ≡ƒö┤  RESULT: FAIL ΓÇö NVIDIA TTS is NOT ready for production
+
+  Error    : HTTP 404 Not Found ΓÇö endpoint URL is wrong: https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api
+  Cause    : The NIM function ID or path in NVIDIA_TTS_URL does not match any active deployment
+  Fix      : Visit https://build.nvidia.com/nvidia/tts and copy the exact endpoint URL from the 'API' tab
+=================================================================

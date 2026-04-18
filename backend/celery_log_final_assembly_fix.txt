@@ -1,0 +1,132 @@
+[2026-03-24 21:13:26,008: WARNING/MainProcess] C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\venv\lib\site-packages\celery\worker\consumer\consumer.py:508: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2026-03-24 21:13:26,027: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-03-24 21:13:26,029: WARNING/MainProcess] C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\venv\lib\site-packages\celery\worker\consumer\consumer.py:508: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2026-03-24 21:13:26,038: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-24 21:13:27,151: INFO/MainProcess] mingle: all alone
+[2026-03-24 21:13:27,234: INFO/MainProcess] celery@pandabear ready.
+[2026-03-24 21:13:55,899: INFO/MainProcess] Task workers.pipeline_worker.run_full_pipeline[2b3d4b18-259b-45d7-b199-7fa7d4148299] received
+[2026-03-24 21:13:55,956: INFO/MainProcess] [scene_breakdown] START
+[2026-03-24 21:13:57,834: WARNING/MainProcess] [scene_breakdown] LLM failed, fallback to rule-based: Invalid format specifier
+[2026-03-24 21:13:57,876: INFO/MainProcess] [voice_generation] START
+[2026-03-24 21:13:59,316: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 1
+[2026-03-24 21:14:01,106: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 2
+[2026-03-24 21:14:02,584: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 3
+[2026-03-24 21:14:04,735: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 4
+[2026-03-24 21:14:05,818: INFO/MainProcess] [visual_selection] START — 4 scenes
+[2026-03-24 21:14:05,818: INFO/MainProcess] [visual_selection] Scene 1 Initial Query: 'majestic mountains stand cinematic footage 4k'
+[2026-03-24 21:14:07,015: INFO/MainProcess] [pexels_video] Query: 'majestic mountains stand cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:14:32,431: INFO/MainProcess] [validation] raw_scene_001.mp4: codec=h264, 3840x2160, size=52115499
+[2026-03-24 21:14:32,438: INFO/MainProcess] [visual_selection] Normalizing asset for scene 1: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\f21fcc03-88fd-41ff-8d6e-24f9547daafd\assets\raw_scene_001.mp4
+[2026-03-24 21:14:40,384: INFO/MainProcess] [validation] clip_001.mp4: codec=h264, 1920x1080, size=816670
+[2026-03-24 21:14:40,384: INFO/MainProcess] [visual_selection] Scene 2 Initial Query: 'river flows gently cinematic footage 4k'
+[2026-03-24 21:14:41,200: INFO/MainProcess] [pexels_video] Query: 'river flows gently cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:14:52,509: INFO/MainProcess] [validation] raw_scene_002.mp4: codec=h264, 1920x1080, size=23354366
+[2026-03-24 21:14:52,510: INFO/MainProcess] [visual_selection] Normalizing asset for scene 2: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\f21fcc03-88fd-41ff-8d6e-24f9547daafd\assets\raw_scene_002.mp4
+[2026-03-24 21:14:57,544: INFO/MainProcess] [validation] clip_002.mp4: codec=h264, 1920x1080, size=2670791
+[2026-03-24 21:14:57,545: INFO/MainProcess] [visual_selection] Scene 3 Initial Query: 'crystal blue cinematic footage 4k'
+[2026-03-24 21:14:58,275: INFO/MainProcess] [pexels_video] Query: 'crystal blue cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:15:12,502: INFO/MainProcess] [validation] raw_scene_003.mp4: codec=h264, 3840x2160, size=44395267
+[2026-03-24 21:15:12,507: INFO/MainProcess] [visual_selection] Normalizing asset for scene 3: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\f21fcc03-88fd-41ff-8d6e-24f9547daafd\assets\raw_scene_003.mp4
+[2026-03-24 21:15:22,558: INFO/MainProcess] [validation] clip_003.mp4: codec=h264, 1920x1080, size=5490298
+[2026-03-24 21:15:22,558: INFO/MainProcess] [visual_selection] Scene 4 Initial Query: 'Nature provides endless cinematic footage 4k'
+[2026-03-24 21:15:23,266: INFO/MainProcess] [pexels_video] Query: 'Nature provides endless cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:15:33,347: INFO/MainProcess] [validation] raw_scene_004.mp4: codec=h264, 3840x2160, size=15839064
+[2026-03-24 21:15:33,372: INFO/MainProcess] [visual_selection] Normalizing asset for scene 4: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\f21fcc03-88fd-41ff-8d6e-24f9547daafd\assets\raw_scene_004.mp4
+[2026-03-24 21:15:36,929: INFO/MainProcess] [validation] clip_004.mp4: codec=h264, 1920x1080, size=864229
+[2026-03-24 21:15:45,289: INFO/MainProcess] [scene_assembly] COMPLETED
+[2026-03-24 21:15:45,294: INFO/MainProcess] [background_music] START
+[2026-03-24 21:15:45,294: WARNING/MainProcess] [background_music] No valid local music found, using silent track
+[2026-03-24 21:15:45,473: INFO/MainProcess] [final_assembly] START
+[2026-03-24 21:15:45,473: INFO/MainProcess] [final_assembly] Concatenating 4 clips
+[2026-03-24 21:15:45,473: INFO/MainProcess] [final_assembly] Step 1: Concat (Stream Copy)
+[2026-03-24 21:15:45,708: INFO/MainProcess] [final_assembly] Step 2: Mixing background music
+[2026-03-24 21:15:46,492: INFO/MainProcess] [final_assembly] DONE
+[2026-03-24 21:15:46,900: INFO/MainProcess] [qa_check] START
+[2026-03-24 21:15:47,000: INFO/MainProcess] [qa_check] PASSED 1920x1080 h264
+[2026-03-24 21:15:47,011: INFO/MainProcess] Task workers.pipeline_worker.run_full_pipeline[2b3d4b18-259b-45d7-b199-7fa7d4148299] succeeded in 111.10899999999674s: None
+[2026-03-24 21:24:10,431: INFO/MainProcess] Task workers.pipeline_worker.run_full_pipeline[178be6e0-e3f6-4f03-bcc8-d8f1c81124e0] received
+[2026-03-24 21:24:10,687: INFO/MainProcess] [scene_breakdown] START
+[2026-03-24 21:24:10,728: WARNING/MainProcess] [scene_breakdown] LLM failed, fallback to rule-based: Invalid format specifier
+[2026-03-24 21:24:10,745: INFO/MainProcess] [voice_generation] START
+[2026-03-24 21:24:12,950: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 1
+[2026-03-24 21:24:14,762: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 2
+[2026-03-24 21:24:17,501: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 3
+[2026-03-24 21:24:19,101: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 4
+[2026-03-24 21:24:21,183: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 5
+[2026-03-24 21:24:22,915: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 6
+[2026-03-24 21:24:24,350: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 7
+[2026-03-24 21:24:25,938: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 8
+[2026-03-24 21:24:27,528: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 9
+[2026-03-24 21:24:30,921: INFO/MainProcess] [voice_generation] Using gTTS fallback for scene 10
+[2026-03-24 21:24:31,455: INFO/MainProcess] [visual_selection] START — 10 scenes
+[2026-03-24 21:24:31,455: INFO/MainProcess] [visual_selection] Scene 1 Initial Query: 'there’s beach where cinematic footage 4k'
+[2026-03-24 21:24:32,837: INFO/MainProcess] [pexels_video] Query: 'there’s beach where cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:25:10,320: INFO/MainProcess] [validation] raw_scene_001.mp4: codec=h264, 3840x2160, size=98327819
+[2026-03-24 21:25:10,325: INFO/MainProcess] [visual_selection] Normalizing asset for scene 1: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_001.mp4
+[2026-03-24 21:25:30,218: INFO/MainProcess] [validation] clip_001.mp4: codec=h264, 1920x1080, size=6174450
+[2026-03-24 21:25:30,219: INFO/MainProcess] [visual_selection] Scene 2 Initial Query: 'Welcome Vaadhoo Island cinematic footage 4k'
+[2026-03-24 21:25:30,830: INFO/MainProcess] [pexels_video] Query: 'Welcome Vaadhoo Island cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:25:38,103: INFO/MainProcess] [validation] raw_scene_002.mp4: codec=h264, 2732x1440, size=20310398
+[2026-03-24 21:25:38,103: INFO/MainProcess] [visual_selection] Normalizing asset for scene 2: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_002.mp4
+[2026-03-24 21:25:47,780: INFO/MainProcess] [validation] clip_002.mp4: codec=h264, 1920x1080, size=3956134
+[2026-03-24 21:25:47,780: INFO/MainProcess] [visual_selection] Scene 3 Initial Query: 'darkness falls something cinematic footage 4k'
+[2026-03-24 21:25:48,550: INFO/MainProcess] [pexels_video] Query: 'darkness falls something cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:26:01,212: INFO/MainProcess] [validation] raw_scene_003.mp4: codec=h264, 1280x720, size=20036669
+[2026-03-24 21:26:01,217: INFO/MainProcess] [visual_selection] Normalizing asset for scene 3: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_003.mp4
+[2026-03-24 21:26:06,624: INFO/MainProcess] [validation] clip_003.mp4: codec=h264, 1920x1080, size=2521207
+[2026-03-24 21:26:06,624: INFO/MainProcess] [visual_selection] Scene 4 Initial Query: 'organisms called phytoplankton cinematic footage 4k'
+[2026-03-24 21:26:08,106: INFO/MainProcess] [pexels_video] Query: 'organisms called phytoplankton cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:26:11,079: INFO/MainProcess] [validation] raw_scene_004.mp4: codec=h264, 1080x1920, size=6115728
+[2026-03-24 21:26:11,083: INFO/MainProcess] [visual_selection] Normalizing asset for scene 4: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_004.mp4
+[2026-03-24 21:26:14,438: INFO/MainProcess] [validation] clip_004.mp4: codec=h264, 1920x1080, size=828532
+[2026-03-24 21:26:14,440: INFO/MainProcess] [visual_selection] Scene 5 Initial Query: 'natural called bioluminescence cinematic footage 4k'
+[2026-03-24 21:26:15,534: INFO/MainProcess] [pexels_video] Query: 'natural called bioluminescence cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:26:38,709: INFO/MainProcess] [validation] raw_scene_005.mp4: codec=h264, 3840x2160, size=49050840
+[2026-03-24 21:26:38,716: INFO/MainProcess] [visual_selection] Normalizing asset for scene 5: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_005.mp4
+[2026-03-24 21:26:54,780: INFO/MainProcess] [validation] clip_005.mp4: codec=h264, 1920x1080, size=2136520
+[2026-03-24 21:26:54,780: INFO/MainProcess] [visual_selection] Scene 6 Initial Query: 'every crashes ocean cinematic footage 4k'
+[2026-03-24 21:26:56,044: INFO/MainProcess] [pexels_video] Query: 'every crashes ocean cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:27:05,839: INFO/MainProcess] [validation] raw_scene_006.mp4: codec=h264, 1920x1080, size=20070624
+[2026-03-24 21:27:05,848: INFO/MainProcess] [visual_selection] Normalizing asset for scene 6: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_006.mp4
+[2026-03-24 21:27:15,954: INFO/MainProcess] [validation] clip_006.mp4: codec=h264, 1920x1080, size=4527412
+[2026-03-24 21:27:15,954: INFO/MainProcess] [visual_selection] Scene 7 Initial Query: 'feels walking through cinematic footage 4k'
+[2026-03-24 21:27:16,701: INFO/MainProcess] [pexels_video] Query: 'feels walking through cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:27:24,412: INFO/MainProcess] [validation] raw_scene_007.mp4: codec=h264, 3840x2160, size=15551207
+[2026-03-24 21:27:24,417: INFO/MainProcess] [visual_selection] Normalizing asset for scene 7: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_007.mp4
+[2026-03-24 21:27:28,509: INFO/MainProcess] [validation] clip_007.mp4: codec=h264, 1920x1080, size=1113991
+[2026-03-24 21:27:28,509: INFO/MainProcess] [visual_selection] Scene 8 Initial Query: 'Locals Stars” you’ll cinematic footage 4k'
+[2026-03-24 21:27:30,610: INFO/MainProcess] [pexels_video] Query: 'Locals Stars” you’ll cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:27:58,740: INFO/MainProcess] [validation] raw_scene_008.mp4: codec=h264, 3840x2160, size=55384892
+[2026-03-24 21:27:58,749: INFO/MainProcess] [visual_selection] Normalizing asset for scene 8: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_008.mp4
+[2026-03-24 21:28:10,804: INFO/MainProcess] [validation] clip_008.mp4: codec=h264, 1920x1080, size=2542010
+[2026-03-24 21:28:10,804: INFO/MainProcess] [visual_selection] Scene 9 Initial Query: 'here’s catch… glowing cinematic footage 4k'
+[2026-03-24 21:28:11,878: INFO/MainProcess] [pexels_video] Query: 'here’s catch… glowing cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:28:36,476: INFO/MainProcess] [validation] raw_scene_009.mp4: codec=h264, 3840x2160, size=62501570
+[2026-03-24 21:28:36,482: INFO/MainProcess] [visual_selection] Normalizing asset for scene 9: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_009.mp4
+[2026-03-24 21:28:57,434: INFO/MainProcess] [validation] clip_009.mp4: codec=h264, 1920x1080, size=10456463
+[2026-03-24 21:28:57,435: INFO/MainProcess] [visual_selection] Scene 10 Initial Query: 'chance… Would visit cinematic footage 4k'
+[2026-03-24 21:28:58,124: INFO/MainProcess] [pexels_video] Query: 'chance… Would visit cinematic footage 4k' | Response Count: 3
+[2026-03-24 21:29:53,042: INFO/MainProcess] [validation] raw_scene_010.mp4: codec=h264, 4096x2160, size=23524052
+[2026-03-24 21:29:53,048: INFO/MainProcess] [visual_selection] Normalizing asset for scene 10: C:\Users\bogad\.gemini\antigravity\scratch\video-automation\backend\workers\..\projects\46f16f43-bab9-47a4-9866-d74bf2dad943\assets\raw_scene_010.mp4
+[2026-03-24 21:29:56,854: INFO/MainProcess] [validation] clip_010.mp4: codec=h264, 1920x1080, size=1182046
+[2026-03-24 21:30:21,655: INFO/MainProcess] [scene_assembly] COMPLETED
+[2026-03-24 21:30:21,660: INFO/MainProcess] [background_music] START
+[2026-03-24 21:30:21,660: WARNING/MainProcess] [background_music] No valid local music found, using silent track
+[2026-03-24 21:30:21,771: INFO/MainProcess] [final_assembly] START
+[2026-03-24 21:30:21,771: INFO/MainProcess] [final_assembly] Concatenating 10 clips
+[2026-03-24 21:30:21,771: INFO/MainProcess] [final_assembly] Step 1: Concat (Stream Copy)
+[2026-03-24 21:30:22,012: INFO/MainProcess] [final_assembly] Step 2: Mixing background music
+[2026-03-24 21:30:23,761: INFO/MainProcess] [final_assembly] DONE
+[2026-03-24 21:30:23,960: INFO/MainProcess] [qa_check] START
+[2026-03-24 21:30:24,017: INFO/MainProcess] [qa_check] PASSED 1920x1080 h264
+[2026-03-24 21:30:24,021: INFO/MainProcess] Task workers.pipeline_worker.run_full_pipeline[178be6e0-e3f6-4f03-bcc8-d8f1c81124e0] succeeded in 373.5940000000119s: None

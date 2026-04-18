@@ -1,0 +1,90 @@
+{
+  "facts": {
+    "scene_count": 5,
+    "scene_duration": 6,
+    "music": "curiosity",
+    "voice": "energetic",
+    "visual_style": "documentary",
+    "thumbnail_style": "bold"
+  },
+  "finance": {
+    "scene_count": 4,
+    "scene_duration": 8,
+    "music": "professional",
+    "voice": "documentary",
+    "visual_style": "realistic",
+    "thumbnail_style": "clean"
+  },
+  "travel": {
+    "scene_count": 6,
+    "scene_duration": 7,
+    "music": "cinematic",
+    "voice": "calm",
+    "visual_style": "nature",
+    "thumbnail_style": "scenic"
+  },
+  "mystery": {
+    "scene_count": 6,
+    "scene_duration": 8,
+    "music": "suspense",
+    "voice": "deep",
+    "visual_style": "cinematic",
+    "thumbnail_style": "bold"
+  },
+  "history": {
+    "scene_count": 5,
+    "scene_duration": 7,
+    "music": "documentary",
+    "voice": "documentary",
+    "visual_style": "documentary",
+    "thumbnail_style": "clean"
+  },
+  "motivation": {
+    "scene_count": 4,
+    "scene_duration": 5,
+    "music": "inspirational",
+    "voice": "motivational",
+    "visual_style": "cinematic",
+    "thumbnail_style": "bold"
+  },
+  "technology": {
+    "scene_count": 6,
+    "scene_duration": 6,
+    "music": "futuristic",
+    "voice": "energetic",
+    "visual_style": "realistic",
+    "thumbnail_style": "youtube-style"
+  },
+  "education": {
+    "scene_count": 5,
+    "scene_duration": 7,
+    "music": "curiosity",
+    "voice": "calm",
+    "visual_style": "minimal",
+    "thumbnail_style": "clean"
+  },
+  "space": {
+    "scene_count": 7,
+    "scene_duration": 8,
+    "music": "cinematic",
+    "voice": "documentary",
+    "visual_style": "cinematic",
+    "thumbnail_style": "cinematic"
+  },
+  "nature": {
+    "scene_count": 6,
+    "scene_duration": 7,
+    "music": "inspirational",
+    "voice": "calm",
+    "visual_style": "nature",
+    "thumbnail_style": "scenic"
+  },
+  "ai": {
+    "scene_count": 5,
+    "scene_duration": 6,
+    "music": "futuristic",
+    "voice": "energetic",
+    "visual_style": "cinematic",
+    "thumbnail_style": "bold"
+  }
+}

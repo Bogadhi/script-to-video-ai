@@ -1,0 +1,62 @@
+[
+  {
+    "index": 1,
+    "text": "What if I told you that there are places on Earth that don't feel real?",
+    "keywords": [
+      "told",
+      "places",
+      "earth",
+      "dont"
+    ],
+    "visual_keywords": [
+      "told",
+      "places",
+      "earth",
+      "dont"
+    ],
+    "emotion": "epic",
+    "intent": "hook",
+    "duration_sec": 6.75,
+    "shot_type": "wide"
+  },
+  {
+    "index": 2,
+    "text": "From floating mountains in China to glowing beaches in the Maldives,\nour planet hides wonders that look like they belong in a dream.",
+    "keywords": [
+      "floating",
+      "mountains",
+      "china",
+      "glowing"
+    ],
+    "visual_keywords": [
+      "floating",
+      "mountains",
+      "china",
+      "glowing"
+    ],
+    "emotion": "mystery",
+    "intent": "info",
+    "duration_sec": 10.35,
+    "shot_type": "medium"
+  },
+  {
+    "index": 3,
+    "text": "Let's explore some of the most unbelievable places on Earth.",
+    "keywords": [
+      "lets",
+      "explore",
+      "unbelievable",
+      "places"
+    ],
+    "visual_keywords": [
+      "lets",
+      "explore",
+      "unbelievable",
+      "places"
+    ],
+    "emotion": "calm",
+    "intent": "info",
+    "duration_sec": 4.5,
+    "shot_type": "medium"
+  }
+]

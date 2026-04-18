@@ -1,0 +1,54 @@
+﻿
+=================================================================
+  NVIDIA TTS ΓÇö STRICT VALIDATION
+  No fallback. No grace. Hard FAIL on any issue.
+=================================================================
+
+=================================================================
+  STEP 1 ΓÇö Load Environment Variables
+=================================================================
+  Γä╣∩╕Å   API_KEY : bDFyNTlvNm5i************************************************************************
+  Γä╣∩╕Å   URL     : https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/nvidia/tts/api
+
+=================================================================
+  STEP 2 ΓÇö API Key Format Validation
+=================================================================
+
+  Γ¥î  FAIL ΓÇö API key does not start with 'nvapi-' (got: bDFyNTlvNm5i...)
+
+=================================================================
+  VALIDATION REPORT
+=================================================================
+{
+    "api_key_status": {
+        "format_valid": false,
+        "starts_with_nvapi": false,
+        "length": 84,
+        "is_placeholder": false,
+        "min_length_satisfied": true
+    },
+    "api_response": {},
+    "audio_validation": {},
+    "final_result": {
+        "nvidia_working": false,
+        "fallback_used": false,
+        "ready_for_production": false,
+        "failures": [
+            "API key does not start with 'nvapi-' (got: bDFyNTlvNm5i...)"
+        ]
+    },
+    "error_report": {
+        "section": "key_validation",
+        "exact_error": "API key does not start with 'nvapi-' (got: bDFyNTlvNm5i...)",
+        "probable_cause": "Wrong key format \u2014 may be ElevenLabs or OpenAI key",
+        "fix_suggestion": "Generate an NVIDIA key at https://build.nvidia.com \u2192 API Keys"
+    }
+}
+
+=================================================================
+  ≡ƒö┤  RESULT: FAIL ΓÇö NVIDIA TTS is NOT ready for production
+
+  Error    : API key does not start with 'nvapi-' (got: bDFyNTlvNm5i...)
+  Cause    : Wrong key format ΓÇö may be ElevenLabs or OpenAI key
+  Fix      : Generate an NVIDIA key at https://build.nvidia.com ΓåÆ API Keys
+=================================================================
