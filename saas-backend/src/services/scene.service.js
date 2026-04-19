@@ -1,5 +1,6 @@
 const axios = require('axios');
 const dotenv = require('dotenv');
+const { getStyle } = require('../config/styles.config');
 
 dotenv.config();
 
@@ -9,20 +10,21 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 class SceneService {
   static _getVisualFocus(index) {
     const visualFocusOptions = [
-      "wide aerial establishing shot",
-      "medium environmental shot",
-      "close-up detail shot",
-      "dynamic motion perspective",
-      "cinematic closing wide shot"
+      'wide aerial establishing shot',
+      'medium environmental shot',
+      'close-up detail shot',
+      'dynamic motion perspective',
+      'cinematic closing wide shot',
     ];
     return visualFocusOptions[index % 5];
   }
 
-  static async generateScenes(script, category = 'storytelling') {
+  static async generateScenes(script, category = 'storytelling', style = 'cinematic') {
     console.log('[SceneService] Generating context-aware scenes...');
     const domain = this._detectDomain(script);
     const coreSubjects = this._extractCoreSubjects(script);
     const lighting = this._detectLighting(script, domain);
+    const styleConfig = getStyle(style);
 
     try {
       const scenes = await this._generateWithOpenRouter(script, category, coreSubjects, domain, lighting);
@@ -340,9 +342,15 @@ Scene variation guidance:
 
   static _detectDomain(script) {
     const text = String(script || '').toLowerCase();
-    if (/finance|stock|investment|market|trading|economy/.test(text)) return 'finance';
-    if (/tech|technology|ai|software|code|digital|machine learning/.test(text)) return 'technology';
-    if (/travel|mountain|river|forest|ocean|nature|waterfall/.test(text)) return 'nature';
+    if (/finance|stock|investment|market|trading|economy|business/.test(text)) return 'finance';
+    if (/tech|technology|ai|software|code|digital|machine learning|app|website/.test(text)) return 'technology';
+    if (/travel|mountain|river|forest|ocean|nature|waterfall|beach|landscape/.test(text)) return 'nature';
+    if (/health|medical|fitness|wellness|exercise|diet|nutrition/.test(text)) return 'health';
+    if (/education|learning|school|student|course|training|knowledge/.test(text)) return 'education';
+    if (/food|recipe|cooking|restaurant|cuisine|dish|meal/.test(text)) return 'food';
+    if (/sport|athlete|game|competition|team|match|championship/.test(text)) return 'sports';
+    if (/entertainment|movie|music|show|comedy|performance|event/.test(text)) return 'entertainment';
+    if (/motivation|inspiration|success|personal growth|achievement|confidence/.test(text)) return 'motivational';
     return 'generic';
   }
 
@@ -441,6 +449,12 @@ Scene variation guidance:
       finance: ['market overview', 'chart detail', 'trading screen', 'growth concept', 'success outcome'],
       technology: ['technology overview', 'interface detail', 'data flow', 'AI concept', 'future outcome'],
       nature: ['environment overview', 'terrain detail', 'natural motion', 'atmospheric texture', 'destination outcome'],
+      health: ['wellness overview', 'body detail', 'movement flow', 'healthy lifestyle', 'fitness goal'],
+      education: ['learning overview', 'knowledge detail', 'teaching moment', 'student perspective', 'mastery outcome'],
+      food: ['food overview', 'ingredient detail', 'cooking process', 'presentation moment', 'taste experience'],
+      sports: ['athlete overview', 'action detail', 'technique moment', 'competition intensity', 'victory outcome'],
+      entertainment: ['performance overview', 'artistic detail', 'emotional moment', 'audience interaction', 'finale outcome'],
+      motivational: ['inspiration overview', 'challenge detail', 'transformation moment', 'breakthrough insight', 'success outcome'],
       generic: ['topic overview', 'core process', 'key detail', 'contrast moment', 'result outcome'],
     };
 
@@ -453,6 +467,12 @@ Scene variation guidance:
       nature: 'landscape depth, natural environment, travel atmosphere',
       finance: 'business energy, market symbolism, data-driven composition',
       technology: 'digital abstraction, futuristic interface, advanced systems',
+      health: 'wellness energy, vitality, natural human movement',
+      education: 'learning focus, knowledge transfer, educational atmosphere',
+      food: 'culinary artistry, appetizing presentation, flavor essence',
+      sports: 'athletic power, movement dynamics, competitive energy',
+      entertainment: 'artistic expression, emotional resonance, performer presence',
+      motivational: 'inspirational energy, personal growth, transformative moments',
       generic: 'cinematic visual representation, symbolic storytelling, polished composition',
     };
     return map[domain] || map.generic;

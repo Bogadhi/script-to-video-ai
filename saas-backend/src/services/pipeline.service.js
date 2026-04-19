@@ -5,6 +5,7 @@ const VisualService = require('./visual.service');
 const TTSService = require('./tts.service');
 const QualityService = require('./quality.service');
 const MusicService = require('./music.service');
+const DiversityService = require('./diversity.service');
 
 // Absolute backend root — consistent regardless of cwd
 const BACKEND_ROOT = path.resolve(__dirname, '..', '..');
@@ -19,18 +20,23 @@ class PipelineService {
     /**
      * @param {string} projectId - e.g. "job_42"
      * @param {string} script - User's raw text script.
-     * @param {Object} options - { category, niche, voice }
+     * @param {Object} options - { category, niche, voice, style }
      * @returns {Promise<Object>} - Full project manifest.
      */
     static async run(projectId, script, options = {}) {
         console.log(`[Pipeline] ▶ Starting project: ${projectId}`);
 
+        DiversityService.reset(projectId);
+        process.env.CURRENT_PROJECT_ID = projectId;
+
         try {
             // 1. Scene Generation (AI or fallback)
             console.log('[Pipeline] Stage 1: Scene generation...');
+            const style = options.style || 'cinematic';
             const scenes = await SceneService.generateScenes(
                 script,
-                options.category || 'storytelling'
+                options.category || 'storytelling',
+                style
             );
             console.log(`[Pipeline] Stage 1 complete — ${scenes.length} scenes.`);
 
@@ -56,7 +62,7 @@ class PipelineService {
                         currentScene.duration = Math.max(3.0, Math.min(6.0, voiceData.duration));
 
                         // Visual generation (with PNG fallback inside VisualService)
-                        const imagePath = await VisualService.generateImage(projectId, currentScene);
+                        const imagePath = await VisualService.generateImage(projectId, currentScene, style, scenes.length);
                         currentScene.image_path = imagePath;
                         currentScene.motion = VisualService.getMotionMetadata(currentScene);
 
@@ -128,14 +134,20 @@ class PipelineService {
 
             const manifestPath = path.resolve(projectDir, 'manifest.json');
             await fs.writeJSON(manifestPath, manifest, { spaces: 2 });
+
+            const diversitySummary = DiversityService.getSummary(projectId);
             console.log('[PIPELINE INPUT]', processedScenes.length);
+            console.log('[PIPELINE SUMMARY]', `${diversitySummary.totalScenes} scenes - sources: ${diversitySummary.sources.join(', ')}`);
+            console.log('[SOURCE DISTRIBUTION]', JSON.stringify(diversitySummary.sourceDistribution));
             console.log(`[Pipeline] ✅ Manifest saved: ${manifestPath}`);
 
+            DiversityService.cleanup(projectId);
             return manifest;
 
         } catch (err) {
             console.error(`[Pipeline] ❌ Fatal error in ${projectId}:`, err.message);
             console.error(err.stack);
+            DiversityService.cleanup(projectId);
             throw err;
         }
     }

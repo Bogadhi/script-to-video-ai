@@ -18,9 +18,10 @@ class RenderService {
         const baseUrl = process.env.BASE_URL || 'http://localhost:5002';
 
         if (!manifest.scenes || manifest.scenes.length < 3) {
-            throw new Error("Insufficient scenes generated");
+            throw new Error('Insufficient scenes generated');
         }
 
+        const usedAssets = new Set();
         const sanitizedScenes = [];
         for (const scene of manifest.scenes || []) {
             const safeScene = { ...scene };
@@ -53,7 +54,16 @@ class RenderService {
                 await this._waitForFile(safeScene.video_path);
             }
 
-            console.log('[FILE READY]', safeScene.scene_id, safeScene.video_path || safeScene.image_path);
+            const assetKey = safeScene.video_path || safeScene.image_path || 'empty';
+            if (usedAssets.has(assetKey)) {
+                console.log('[RENDER DUPLICATE CHECK] detected duplicate asset for scene', safeScene.scene_id, 'creating unique placeholder');
+                safeScene.image_path = await this._createPlaceholder(projectId, safeScene.scene_id);
+                safeScene.video_path = null;
+            }
+            usedAssets.add(assetKey);
+
+            const sourceType = safeScene.video_path ? 'video' : (safeScene.image_path ? 'image' : 'placeholder');
+            console.log('[RENDER VISUAL]', `scene_id=${safeScene.scene_id} type=${sourceType} path=${safeScene.video_path || safeScene.image_path}`);
             sanitizedScenes.push(safeScene);
         }
 
