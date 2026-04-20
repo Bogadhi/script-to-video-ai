@@ -31,6 +31,9 @@ export const RemotionRoot: React.FC = () => {
                 defaultProps={{
                     scenes: [],
                     musicPath: '',
+                    musicStartFrame: 0,
+                    watermarkText: 'Bogadhi Free',
+                    showWatermark: false,
                 }}
             />
         </>

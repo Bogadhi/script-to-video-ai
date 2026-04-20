@@ -6,6 +6,11 @@ interface SceneProps {
     videoPath?: string | null;
     audioPath: string;
     durationInFrames: number;
+    composition?: string;
+    storyRole?: string;
+    shotType?: string;
+    showWatermark?: boolean;
+    watermarkText?: string;
     motion?: {
         startScale?: number;
         endScale?: number;
@@ -21,6 +26,11 @@ export const Scene: React.FC<SceneProps> = ({
     videoPath,
     audioPath,
     durationInFrames,
+    composition,
+    storyRole,
+    shotType,
+    showWatermark,
+    watermarkText,
     motion,
 }) => {
     const frame = useCurrentFrame();
@@ -85,6 +95,33 @@ export const Scene: React.FC<SceneProps> = ({
             ) : null}
 
             {safeAudioPath ? <Audio src={safeAudioPath} /> : null}
+
+            {showWatermark ? (
+                <AbsoluteFill
+                    style={{
+                        justifyContent: 'flex-end',
+                        alignItems: 'flex-end',
+                        padding: 36,
+                        pointerEvents: 'none',
+                    }}
+                >
+                    <div
+                        style={{
+                            fontFamily: 'Georgia, serif',
+                            fontSize: 28,
+                            letterSpacing: 1.5,
+                            color: 'rgba(255,255,255,0.78)',
+                            textTransform: 'uppercase',
+                            background: 'rgba(0,0,0,0.28)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            padding: '10px 14px',
+                            backdropFilter: 'blur(8px)',
+                        }}
+                    >
+                        {watermarkText || 'Bogadhi Free'}
+                    </div>
+                </AbsoluteFill>
+            ) : null}
         </AbsoluteFill>
     );
 };

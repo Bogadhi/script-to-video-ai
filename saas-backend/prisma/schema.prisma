@@ -33,9 +33,16 @@ model Payment {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  projectName String   @unique
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  projectName       String   @unique
+  status            String   @default("ACTIVE")
+  draftStatus       String   @default("NONE")
+  manifestPath      String?
+  draftManifestPath String?
+  editorStatePath   String?
+  renderCount       Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id])
 }

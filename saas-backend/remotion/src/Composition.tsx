@@ -17,12 +17,18 @@ interface SceneData {
     video_path?: string | null;
     audio_path: string;
     duration: number;
+    composition?: string;
+    story_role?: string;
+    shot_type?: string;
     motion?: SceneMotion;
 }
 
 interface MainProps {
-    scenes: SceneData[];
-    musicPath: string;
+    scenes?: SceneData[];
+    musicPath?: string;
+    musicStartFrame?: number;
+    watermarkText?: string;
+    showWatermark?: boolean;
 }
 
 const FadeTransition: React.FC<{
@@ -42,7 +48,7 @@ const FadeTransition: React.FC<{
     return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
 
-export const Main: React.FC<MainProps> = ({ scenes, musicPath }) => {
+export const Main: React.FC<MainProps> = ({ scenes, musicPath, musicStartFrame = 0, watermarkText = 'Bogadhi', showWatermark = false }) => {
     const { fps } = useVideoConfig();
 
     const isMediaSource = (url?: string | null) =>
@@ -63,6 +69,9 @@ export const Main: React.FC<MainProps> = ({ scenes, musicPath }) => {
             video_path: videoPath,
             audio_path: isMediaSource(scene?.audio_path) ? scene.audio_path : '',
             duration,
+            composition: scene?.composition ?? 'medium',
+            story_role: scene?.story_role ?? 'development',
+            shot_type: scene?.shot_type ?? 'medium_shot',
             motion: {
                 startScale: scene?.motion?.startScale ?? 1,
                 endScale: scene?.motion?.endScale ?? 1.1,
@@ -89,7 +98,7 @@ export const Main: React.FC<MainProps> = ({ scenes, musicPath }) => {
 
     return (
         <AbsoluteFill>
-            {safeMusicPath ? <Audio src={safeMusicPath} startFrom={0} endAt={totalDurationFrames} /> : null}
+            {safeMusicPath ? <Audio src={safeMusicPath} startFrom={musicStartFrame} endAt={musicStartFrame + totalDurationFrames} volume={0.32} /> : null}
 
             {safeScenes.map((scene, index) => {
                 const frames = Math.floor((scene.duration || 3) * fps);
@@ -103,7 +112,12 @@ export const Main: React.FC<MainProps> = ({ scenes, musicPath }) => {
                                 videoPath={scene.video_path}
                                 audioPath={scene.audio_path}
                                 durationInFrames={frames}
+                                composition={scene.composition}
+                                storyRole={scene.story_role}
+                                shotType={scene.shot_type}
                                 motion={scene.motion}
+                                showWatermark={showWatermark}
+                                watermarkText={watermarkText}
                             />
                         </FadeTransition>
                     </Sequence>

@@ -5,6 +5,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const { authenticateToken } = require('./middleware/auth');
 const prisma = require('./lib/db');
+const Metrics = require('./lib/metrics');
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use('/assets', express.static(assetsDir));
 
 // Debug middleware
 app.use((req, res, next) => {
+  Metrics.markApiRequest();
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
@@ -45,6 +47,12 @@ const authRoutes = require('./routes/auth');
 const paymentRoutes = require('./routes/payments');
 const creditRoutes = require('./routes/credits');
 const videoJobRoutes = require('./routes/videoJobs');
+const editorApiRoutes = require('./routes/editor.api');
+
+async function findQueueJob(projectId) {
+  const { videoQueue } = require('./queues/video.queue');
+  return (await videoQueue.getJob(projectId)) || (await videoQueue.getJob(projectId.replace(/^job_/, '')));
+}
 
 // Start video worker (inline — it registers itself with BullMQ on start)
 require('./workers/video.worker');
@@ -53,15 +61,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/credits', creditRoutes);
 app.use(videoJobRoutes); // handles /generate-video, /job/:id (both root and /api/ variants)
+app.use(editorApiRoutes);
 
 // ===== PIPELINE STATUS (GATED) =====
 app.get('/api/pipeline/:project_id/status', authenticateToken, async (req, res) => {
   const { project_id } = req.params;
-  const jobId = project_id.replace('job_', '');
 
   try {
-    const { videoQueue } = require('./queues/video.queue');
-    const job = await videoQueue.getJob(jobId);
+    const job = await findQueueJob(project_id);
 
     if (!job) return res.status(404).json({ message: 'Job not found.' });
     if (job.data.userId !== req.user.user_id) return res.status(403).json({ message: 'Access denied.' });
@@ -89,11 +96,9 @@ app.get('/api/pipeline/:project_id/status', authenticateToken, async (req, res) 
 // ===== PIPELINE RESULT (GATED) =====
 app.get('/api/pipeline/:project_id/result', authenticateToken, async (req, res) => {
   const { project_id } = req.params;
-  const jobId = project_id.replace('job_', '');
 
   try {
-    const { videoQueue } = require('./queues/video.queue');
-    const job = await videoQueue.getJob(jobId);
+    const job = await findQueueJob(project_id);
 
     if (!job) return res.status(404).json({ message: 'Job not found.' });
     if (job.data.userId !== req.user.user_id) return res.status(403).json({ message: 'Access denied.' });
@@ -135,16 +140,15 @@ app.get('/api/pipeline/:project_id/metadata', authenticateToken, async (req, res
 // ===== PIPELINE RETRY (GATED) =====
 app.post('/api/pipeline/:project_id/retry', authenticateToken, async (req, res) => {
   const { project_id } = req.params;
-  const jobId = project_id.replace('job_', '');
   try {
     const { videoQueue } = require('./queues/video.queue');
-    const oldJob = await videoQueue.getJob(jobId);
+    const oldJob = await findQueueJob(project_id);
 
     if (!oldJob) return res.status(404).json({ message: 'Job not found.' });
     if (oldJob.data.userId !== req.user.user_id) return res.status(403).json({ message: 'Access denied.' });
 
     const newJob = await videoQueue.add('generate-video', oldJob.data);
-    res.json({ project_id: `job_${newJob.id}`, job_id: newJob.id });
+    res.json({ project_id: oldJob.data?.payload?.projectId || String(newJob.id), job_id: newJob.id });
   } catch (err) {
     console.error('[Pipeline Retry Error]', err);
     res.status(500).json({ message: 'Error retrying pipeline.' });
@@ -234,16 +238,11 @@ app.post('/api/scripts/create', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'Insufficient credits. Please upgrade your plan.' });
     }
 
-    const { videoQueue } = require('./queues/video.queue');
-    const job = await videoQueue.add('generate-video', {
-      userId,
-      authHeader: req.headers.authorization,
-      payload: req.body,
-    });
-
+    const crypto = require('crypto');
+    const projectId = `job_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
     await prisma.$transaction([
       prisma.project.create({
-        data: { userId: user.id, projectName: `job_${job.id}` },
+        data: { userId: user.id, projectName: projectId },
       }),
       prisma.user.update({
         where: { id: user.id },
@@ -251,8 +250,20 @@ app.post('/api/scripts/create', authenticateToken, async (req, res) => {
       }),
     ]);
 
+    const { videoQueue } = require('./queues/video.queue');
+    const job = await videoQueue.add('generate-video', {
+      userId,
+      authHeader: req.headers.authorization,
+      payload: {
+        ...req.body,
+        projectId,
+        subscriptionPlan: user.plan || 'FREE',
+        resumeFromLastChunk: true,
+      },
+    }, { jobId: projectId });
+
     res.json({
-      project_id: `job_${job.id}`,
+      project_id: projectId,
       job_id: job.id,
       remaining_credits: user.credits - 1,
     });
@@ -269,6 +280,11 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     videoDir: PROJECTS_ROOT,
   });
+});
+
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(Metrics.toPrometheus());
 });
 
 // ===== 404 FALLBACK =====
