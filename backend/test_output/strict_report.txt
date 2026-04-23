@@ -1,4 +1,4 @@
-﻿
+
 =================================================================
   NVIDIA TTS ΓÇö STRICT VALIDATION
   No fallback. No grace. Hard FAIL on any issue.

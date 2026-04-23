@@ -1,108 +1,135 @@
 const axios = require('axios');
 const dotenv = require('dotenv');
 const { getStyle } = require('../config/styles.config');
-const MetricsService = require('./metrics.service');
 
 dotenv.config();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const STORY_ROLES = ['hook', 'development', 'detail', 'resolution'];
-const COMPOSITION_SEQUENCE = ['wide', 'medium', 'close-up'];
-const SHOT_SEQUENCE = ['wide_aerial', 'medium_shot', 'close_up', 'dynamic_motion', 'cinematic_wide'];
-const LENS_BY_COMPOSITION = {
-  wide: '24mm wide lens',
-  medium: '50mm cinematic lens',
-  'close-up': '85mm portrait lens',
-};
-const LIGHTING_VARIATIONS = [
-  'golden sunrise haze',
-  'side-lit dramatic contrast',
-  'soft overcast realism',
-  'neon practical glow',
-  'misty atmosphere',
-];
-const ANGLE_VARIATIONS = [
-  'drone establishing angle',
-  'eye-level narrative angle',
-  'macro detail angle',
-  'tracking motion angle',
-  'parallax reveal angle',
-];
 
 class SceneService {
   static _getVisualFocus(index) {
-    return SHOT_SEQUENCE[index % SHOT_SEQUENCE.length];
+    const visualFocusOptions = [
+      'wide aerial establishing shot',
+      'medium environmental shot',
+      'close-up detail shot',
+      'dynamic motion perspective',
+      'cinematic closing wide shot',
+    ];
+    return visualFocusOptions[index % 5];
   }
 
   static async generateScenes(script, category = 'storytelling', style = 'cinematic') {
-    console.log('[SceneService] Generating story-aware scenes...');
+    console.log('[SceneService] Generating context-aware scenes...');
     const domain = this._detectDomain(script);
     const coreSubjects = this._extractCoreSubjects(script);
-    const baseLighting = this._detectLighting(script, domain, style);
-    const styleProfile = getStyle(style);
+    const lighting = this._detectLighting(script, domain);
+    const styleConfig = getStyle(style);
 
     try {
-      const scenes = await this._generateWithOpenRouter(script, category, coreSubjects, domain, baseLighting, styleProfile, style);
-      if (scenes?.length) {
-        return this._finalizeScenes(scenes, coreSubjects, domain, baseLighting, styleProfile, style);
+      const scenes = await this._generateWithOpenRouter(script, category, coreSubjects, domain, lighting);
+      if (scenes && scenes.length > 0) {
+        let aiScenes = this._normalizeScenes(this._enforceSubjectConsistency(scenes, coreSubjects, lighting, domain));
+        if (aiScenes.length < 4) {
+            const baseScene = aiScenes[0];
+            const baseSubjects = baseScene?.keywords || ["visual"];
+            while (aiScenes.length < 5) {
+                aiScenes.push({
+                    ...baseScene,
+                    scene_id: aiScenes.length + 1,
+                    visual_prompt: baseScene.visual_prompt + ", different composition",
+                    keywords: baseSubjects,
+                    duration: 3 + (aiScenes.length % 2)
+                });
+            }
+        }
+        aiScenes = this._normalizeScenes(aiScenes);
+        console.log('[SCENE SERVICE OUTPUT]', aiScenes.length);
+        console.log('[SCENE COUNT]', aiScenes.length);
+        return aiScenes;
       }
-    } catch (error) {
-      console.warn('[SceneService] OpenRouter failed:', error.message);
+    } catch (err) {
+      console.warn('[SceneService] OpenRouter failed:', err.message);
     }
 
-    const fallbackScenes = this._keywordAwareSplitter(script, category, coreSubjects, domain, baseLighting, styleProfile);
-    return this._finalizeScenes(fallbackScenes, coreSubjects, domain, baseLighting, styleProfile, style);
+    const fallback = this._keywordAwareSplitter(script, category, coreSubjects, domain, lighting);
+    let fallbackScenes = this._normalizeScenes(this._enforceSubjectConsistency(fallback, coreSubjects, lighting, domain));
+    
+    if (fallbackScenes.length < 4) {
+        const baseScene = fallbackScenes[0];
+        const baseSubjects = baseScene?.keywords || ["visual"];
+        while (fallbackScenes.length < 5) {
+            fallbackScenes.push({
+                ...baseScene,
+                scene_id: fallbackScenes.length + 1,
+                visual_prompt: baseScene.visual_prompt + ", different composition",
+                keywords: baseSubjects,
+                duration: 3 + (fallbackScenes.length % 2)
+            });
+        }
+    }
+    fallbackScenes = this._normalizeScenes(fallbackScenes);
+    console.log('[SCENE SERVICE OUTPUT]', fallbackScenes.length);
+    console.log('[SCENE COUNT]', fallbackScenes.length);
+    return fallbackScenes;
   }
 
-  static async _generateWithOpenRouter(script, category, coreSubjects, domain, lighting, styleProfile, styleName) {
+  static _normalizeScenes(scenes) {
+    return (Array.isArray(scenes) ? scenes : [])
+      .filter(Boolean)
+      .map((scene, index) => ({
+        ...scene,
+        scene: index + 1,
+        scene_id: index + 1,
+      }));
+  }
+
+  static async _generateWithOpenRouter(script, category, coreSubjects, domain, lighting) {
     if (!OPENROUTER_API_KEY) {
       throw new Error('OPENROUTER_API_KEY not set');
     }
 
     const subjectText = coreSubjects.join(', ');
-    const systemPrompt = `You are a cinematic planner for an AI video SaaS.
+    const allowPeople = domain !== 'nature';
 
-Return only JSON array.
-Every scene must preserve semantic diversity while staying on-topic.
-Use these mandatory cinematic beats in order: Hook, Development, Detail, Resolution.
-First 3 scenes MUST be composition forced: wide, medium, close-up.
-Each scene must include:
-- scene_id
-- narration
-- visual_prompt
-- keywords
-- mood
-- camera_motion
-- composition
-- story_role
-- shot_type
-- duration
-- search_queries (exactly 5 distinct queries with different angle/lighting wording)
-- subject_variation
-- relevance_goal
+    const systemPrompt = `You are a cinematic scene generator for short-form AI videos.
 
-Style profile:
-- label: ${styleProfile.label}
-- lens: ${styleProfile.lensPrompt}
-- lighting: ${styleProfile.lightingProfile}
-- texture: ${styleProfile.textureProfile}
+HARD CONSTRAINTS:
+- Domain: ${domain}.
+- Every scene must stay on the same topic family: ${subjectText}.
+- Keep lighting and atmosphere consistent.
+- Each scene must focus on a different aspect of the subject.
+- Preserve cinematic camera variation and continuity.
+- ${allowPeople ? 'People may appear if relevant to the domain.' : 'Do not include people unless the script explicitly requires them.'}
+- Output only valid JSON array with no markdown.`;
 
-Domain: ${domain}
-Category: ${category}
-Subjects: ${subjectText}
-Base lighting: ${lighting}`;
+    const userPrompt = `Break this script into 4-7 cinematic scenes for a ${category} video.
 
-    const userPrompt = `Script:
+SCRIPT:
 """
-${script.trim().slice(0, 5000)}
+${script.trim().slice(0, 2500)}
 """
 
-Produce 4-8 scenes with YouTube-competitive cinematic rhythm.
-Hook should feel fastest.
-Detail should be most intimate.
-Resolution should feel conclusive.
-Search queries must remain safe for stock video search and semantically varied.`;
+Return JSON array items:
+{
+  "scene_id": 1,
+  "narration": "10-30 words",
+  "visual_prompt": "cinematic visual for one aspect of ${subjectText}",
+  "keywords": ["${coreSubjects[0] || 'visual'}", "${coreSubjects[1] || coreSubjects[0] || 'concept'}"],
+  "camera_motion": "zoom_in|zoom_out|pan_left|pan_right|static",
+  "mood": "epic|mysterious|energetic|calm|somber",
+  "lighting": "${lighting}",
+  "style": "cinematic realism, ultra detailed, 8k",
+  "composition": "wide|medium|close-up",
+  "continuity_hint": "same topic, different aspect",
+  "duration": 4
+}
+
+Scene variation guidance:
+- Finance: overview, charts, trading screens, growth concept, outcome
+- Technology: overview, interface, code/data flow, AI concept, end-state
+- Nature: overview, terrain, detail, motion, atmosphere
+- Generic: overview, process, detail, contrast, result`;
 
     const response = await axios.post(
       OPENROUTER_URL,
@@ -112,8 +139,8 @@ Search queries must remain safe for stock video search and semantically varied.`
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.45,
-        max_tokens: 3000,
+        temperature: 0.3,
+        max_tokens: 2500,
       },
       {
         headers: {
@@ -126,20 +153,13 @@ Search queries must remain safe for stock video search and semantically varied.`
       }
     );
 
-    MetricsService.logApiCost(process.env.CURRENT_PROJECT_ID || 'scene-planner', 'openrouter', {
-      ...MetricsService.estimateOpenRouterCost(response.data?.usage || {}),
-      requests: 1,
-      meta: {
-        model: response.data?.model || 'mistral-small',
-      },
-    });
-
     const content = response.data?.choices?.[0]?.message?.content;
     if (!content) {
       throw new Error('Empty AI response');
     }
 
     const jsonText = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+
     let parsed;
     try {
       parsed = JSON.parse(jsonText);
@@ -159,288 +179,165 @@ Search queries must remain safe for stock video search and semantically varied.`
       throw new Error('Empty scene array');
     }
 
-    return parsed;
-  }
-
-  static _keywordAwareSplitter(script, category, coreSubjects, domain, lighting, styleProfile) {
-    const sentences = script
-      .replace(/([.!?])\s+/g, '$1|')
-      .split('|')
-      .map((segment) => segment.trim())
-      .filter((segment) => segment.length > 8);
-
-    const targetScenes = Math.min(8, Math.max(4, Math.ceil((sentences.length || 4) / 2)));
-    const batchSize = Math.max(1, Math.ceil((sentences.length || 1) / targetScenes));
-    const chunks = [];
-    for (let index = 0; index < sentences.length; index += batchSize) {
-      chunks.push(sentences.slice(index, index + batchSize).join(' '));
-    }
-    while (chunks.length < 4) {
-      chunks.push(chunks[chunks.length - 1] || script.slice(0, 120));
-    }
-
-    return chunks.map((text, index) => {
-      const storyRole = this._storyRoleForIndex(index, chunks.length);
-      const composition = this._compositionForIndex(index);
-      const shotType = this._shotTypeForComposition(composition, storyRole);
-      const subjectVariation = this._subjectVariation(coreSubjects, index, domain);
-      const searchQueries = this._buildSearchQueries({
-        subjects: coreSubjects,
-        subjectVariation,
-        composition,
-        shotType,
-        lighting,
+    return parsed.map((s, i) => {
+      const aspect = this._resolveSceneAspect(domain, i);
+      const composition = this._normalizeComposition(s.composition, aspect);
+      const visual_focus = this._getVisualFocus(i);
+      const baseVisualPrompt = this._buildVisualPrompt({
         domain,
-        styleProfile,
-        index,
-      });
-      return {
-        scene_id: index + 1,
-        narration: text,
-        visual_prompt: this._buildVisualPrompt({
-          domain,
-          subjects: coreSubjects,
-          composition,
-          storyRole,
-          subjectVariation,
-          lighting,
-          styleProfile,
-          shotType,
-        }),
-        keywords: coreSubjects,
-        mood: this._moodForRole(storyRole),
-        camera_motion: this._cameraMotionForComposition(composition, storyRole),
+        subjects: coreSubjects,
         composition,
-        story_role: storyRole,
-        shot_type: shotType,
-        duration: this._durationForRoleAndComposition(storyRole, composition, text),
-        subject_variation: subjectVariation,
-        search_queries: searchQueries,
-        relevance_goal: 0.7,
+        aspect,
+        lighting,
+      });
+      const visualPrompt = `${baseVisualPrompt}, camera angle: ${visual_focus}, different from previous scene, unique composition`;
+
+      return {
+        scene: i + 1,
+        scene_id: s.scene_id || i + 1,
+        text: s.narration || '',
+        narration: s.narration || '',
+        visual_focus,
+        visual_prompt: visualPrompt,
+        keywords: coreSubjects,
+        domain,
+        negative_prompt: this._buildNegativePrompt(domain),
+        camera_motion: this._normalizeMotion(s.camera_motion),
+        mood: (s.mood || 'calm').toLowerCase(),
+        lighting,
+        style: 'photorealistic, ultra detailed, 4k',
+        composition,
+        continuity_hint: `LOCKED: ${subjectText}. Same domain, same lighting, different aspect: ${aspect}.`,
+        duration: this._getAdaptiveDuration(visualPrompt, s.narration || ''),
       };
     });
   }
 
-  static _finalizeScenes(inputScenes, coreSubjects, domain, lighting, styleProfile, styleName) {
-    let scenes = (Array.isArray(inputScenes) ? inputScenes : [])
-      .filter(Boolean)
-      .slice(0, 24)
-      .map((scene, index) => {
-        const storyRole = this._storyRoleForIndex(index, inputScenes.length);
-        const composition = this._normalizeComposition(scene.composition, index);
-        const shotType = scene.shot_type || this._shotTypeForComposition(composition, storyRole);
-        const subjectVariation = scene.subject_variation || this._subjectVariation(coreSubjects, index, domain);
-        const searchQueries = Array.isArray(scene.search_queries) && scene.search_queries.length >= 5
-          ? scene.search_queries.slice(0, 5)
-          : this._buildSearchQueries({
-              subjects: coreSubjects,
-              subjectVariation,
-              composition,
-              shotType,
-              lighting,
-              domain,
-              styleProfile,
-              index,
-            });
-        const visualPrompt = this._buildVisualPrompt({
-          domain,
-          subjects: scene.keywords || coreSubjects,
-          composition,
-          storyRole,
-          subjectVariation,
-          lighting,
-          styleProfile,
-          shotType,
-          visualPrompt: scene.visual_prompt,
-        });
-        return {
-          scene: index + 1,
-          scene_id: index + 1,
-          text: scene.narration || scene.text || '',
-          narration: scene.narration || scene.text || '',
-          visual_focus: this._getVisualFocus(index),
-          visual_prompt: visualPrompt,
-          keywords: (scene.keywords || coreSubjects).slice(0, 5),
-          domain,
-          negative_prompt: this._buildNegativePrompt(domain, styleName),
-          camera_motion: this._normalizeMotion(scene.camera_motion || this._cameraMotionForComposition(composition, storyRole)),
-          mood: this._normalizeMood(scene.mood || this._moodForRole(storyRole)),
-          lighting,
-          style: styleProfile.label,
-          style_profile: styleProfile,
-          composition,
-          shot_type: shotType,
-          story_role: storyRole,
-          structure_role: storyRole,
-          subject_variation: subjectVariation,
-          search_queries: searchQueries,
-          continuity_hint: `Same domain, same story world, new subject detail: ${subjectVariation}`,
-          relevance_goal: Number(scene.relevance_goal || 0.7),
-          duration: this._durationForRoleAndComposition(storyRole, composition, scene.narration || scene.text || ''),
-        };
-      });
+  static _keywordAwareSplitter(script, category, coreSubjects, domain, lighting) {
+    const subjectText = coreSubjects.join(', ');
+    const sentences = script
+      .replace(/([.!?])\s+/g, '$1|')
+      .split('|')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 5);
 
-    if (scenes.length < 4 && scenes.length > 0) {
-      while (scenes.length < 4) {
-        const source = scenes[scenes.length - 1];
-        scenes.push({
-          ...source,
-          scene: scenes.length + 1,
-          scene_id: scenes.length + 1,
-          composition: this._compositionForIndex(scenes.length),
-          story_role: this._storyRoleForIndex(scenes.length, 4),
-          search_queries: this._buildSearchQueries({
-            subjects: coreSubjects,
-            subjectVariation: this._subjectVariation(coreSubjects, scenes.length, domain),
-            composition: this._compositionForIndex(scenes.length),
-            shotType: this._shotTypeForComposition(this._compositionForIndex(scenes.length), this._storyRoleForIndex(scenes.length, 4)),
-            lighting,
-            domain,
-            styleProfile,
-            index: scenes.length,
-          }),
-        });
+    const target = Math.min(7, Math.max(3, Math.ceil((sentences.length || 3) / 2)));
+    const groups = [];
+    const batchSize = Math.max(1, Math.ceil((sentences.length || 1) / target));
+
+    for (let i = 0; i < sentences.length; i += batchSize) {
+      const group = sentences.slice(i, i + batchSize).join(' ').trim();
+      if (group) {
+        groups.push(group);
       }
     }
 
-    return scenes;
-  }
+    while (groups.length < 3) {
+      groups.push(sentences[sentences.length - 1] || script.slice(0, 80));
+    }
 
-  static _buildSearchQueries({ subjects, subjectVariation, composition, shotType, lighting, domain, styleProfile, index }) {
-    const baseSubjects = (subjects || []).slice(0, 3).join(' ').trim() || 'visual subject';
-    const domainHint = this._domainVisualDescriptor(domain);
-    const styleHint = styleProfile?.label || 'Cinematic';
-    const queryPairs = [
-      ['establishing', LIGHTING_VARIATIONS[index % LIGHTING_VARIATIONS.length]],
-      ['alternative angle', LIGHTING_VARIATIONS[(index + 1) % LIGHTING_VARIATIONS.length]],
-      ['detail focus', LIGHTING_VARIATIONS[(index + 2) % LIGHTING_VARIATIONS.length]],
-      ['motion pass', LIGHTING_VARIATIONS[(index + 3) % LIGHTING_VARIATIONS.length]],
-      ['resolution frame', LIGHTING_VARIATIONS[(index + 4) % LIGHTING_VARIATIONS.length]],
-    ];
-
-    return queryPairs.map(([intent, light], queryIndex) => {
-      const angle = ANGLE_VARIATIONS[(index + queryIndex) % ANGLE_VARIATIONS.length];
-      return [
-        baseSubjects,
-        subjectVariation,
+    return groups.map((text, i) => {
+      const aspect = this._resolveSceneAspect(domain, i);
+      const composition = this._compositionForAspect(aspect);
+      const visual_focus = this._getVisualFocus(i);
+      const baseVisualPrompt = this._buildVisualPrompt({
+        domain,
+        subjects: coreSubjects,
         composition,
-        shotType.replace(/_/g, ' '),
-        intent,
-        angle,
-        light,
+        aspect,
         lighting,
-        styleHint,
-        domainHint,
-      ].join(' ').replace(/\s+/g, ' ').trim();
+      });
+      const visualPrompt = `${baseVisualPrompt}, camera angle: ${visual_focus}, different from previous scene, unique composition`;
+
+      return {
+        scene: i + 1,
+        scene_id: i + 1,
+        text,
+        narration: text,
+        visual_focus,
+        visual_prompt: visualPrompt,
+        keywords: coreSubjects,
+        domain,
+        negative_prompt: this._buildNegativePrompt(domain),
+        camera_motion: ['zoom_in', 'pan_right', 'static', 'zoom_out', 'pan_left'][i % 5],
+        mood: ['calm', 'epic', 'mysterious', 'calm', 'somber'][i % 5],
+        lighting,
+        style: 'photorealistic, ultra detailed, 4k',
+        composition,
+        continuity_hint: `LOCKED: ${subjectText}. Same domain, same lighting, different aspect: ${aspect}.`,
+        duration: this._getAdaptiveDuration(visualPrompt, text),
+      };
     });
   }
 
-  static _buildVisualPrompt({ domain, subjects, composition, storyRole, subjectVariation, lighting, styleProfile, shotType, visualPrompt = '' }) {
-    const subjectText = (subjects || []).join(', ');
-    const lens = styleProfile?.lensPrompt || '35mm cinematic lens';
-    const styleLighting = styleProfile?.lightingProfile || lighting;
-    const texture = styleProfile?.textureProfile || 'premium detail';
-    const base = visualPrompt && visualPrompt.length > 20
-      ? visualPrompt
-      : `Cinematic ${composition} of ${subjectText}, ${subjectVariation}, ${this._domainVisualDescriptor(domain)}`;
+  static _enforceSubjectConsistency(scenes, coreSubjects, globalLighting, domain) {
+    const subjectText = coreSubjects.join(', ');
 
-    return [
-      base,
-      `story beat: ${storyRole}`,
-      `shot type: ${shotType.replace(/_/g, ' ')}`,
-      `lens: ${lens}`,
-      `lighting: ${lighting}, ${styleLighting}`,
-      `texture: ${texture}`,
-      'distinct composition from adjacent scenes',
-      'high relevance to narration',
-    ].join(', ');
+    return scenes.map((scene, index) => {
+      const visual = String(scene.visual_prompt || '').toLowerCase();
+      const hasAnySubject = coreSubjects.some((s) => visual.includes(String(s).toLowerCase()));
+      const composition = this._normalizeComposition(scene.composition, this._resolveSceneAspect(domain, index));
+      const aspect = this._resolveSceneAspect(domain, index);
+      const visual_focus = this._getVisualFocus(index);
+
+      const baseVisual = hasAnySubject
+        ? scene.visual_prompt
+        : this._buildVisualPrompt({
+            domain,
+            subjects: coreSubjects,
+            composition,
+            aspect,
+            lighting: globalLighting,
+          });
+      const finalVisual = baseVisual.includes('different from previous scene')
+        ? baseVisual
+        : `${baseVisual}, camera angle: ${visual_focus}, different from previous scene, unique composition`;
+
+      return {
+        ...scene,
+        visual_focus,
+        visual_prompt: finalVisual,
+        keywords: coreSubjects,
+        domain,
+        negative_prompt: this._buildNegativePrompt(domain),
+        lighting: globalLighting,
+        style: 'photorealistic, ultra detailed, 4k',
+        composition,
+        continuity_hint: `LOCKED: ${subjectText}. Same domain, same lighting, different aspect: ${aspect}.`,
+        duration: this._getAdaptiveDuration(finalVisual, scene.narration || scene.text || ''),
+      };
+    });
   }
 
-  static _buildNegativePrompt(domain, styleName) {
-    const common = ['text', 'watermark', 'blurry', 'low quality'];
-    if (styleName !== 'anime') {
-      common.push('cartoon', 'anime');
-    }
+  static _buildVisualPrompt({ domain, subjects, composition, aspect, lighting }) {
+    const subjectText = subjects.join(', ');
+    const domainDescriptor = this._domainVisualDescriptor(domain);
+    const peopleClause = domain === 'nature' ? 'no people, no humans' : 'domain-appropriate presence allowed';
+
+    return `Ultra realistic cinematic ${composition} of ${subjectText}, focus on ${aspect}, ${domainDescriptor}, lighting: ${lighting}, ${peopleClause}, high detail, 4k, photorealistic`;
+  }
+
+  static _buildNegativePrompt(domain) {
+    const common = ['text', 'watermark', 'blurry', 'low quality', 'cartoon', 'anime', 'sketch'];
     if (domain === 'nature') {
-      common.push('people', 'portrait', 'indoor', 'building');
+      return [...common, 'people', 'human', 'portrait', 'indoor', 'studio', 'city', 'building'].join(', ');
     }
-    return common.join(', ');
+    return [...common, 'distorted anatomy', 'broken hands', 'deformed face'].join(', ');
   }
 
-  static _storyRoleForIndex(index, totalScenes) {
-    if (index === 0) return 'hook';
-    if (index === totalScenes - 1) return 'resolution';
-    if (index === 2 || index === Math.floor(totalScenes / 2)) return 'detail';
-    return 'development';
-  }
+  static _getAdaptiveDuration(visualPrompt, text = '') {
+    const prompt = String(visualPrompt || '').toLowerCase();
+    const wordCount = String(text).split(/\s+/).filter(Boolean).length;
+    let weightDuration = 3.5;
 
-  static _compositionForIndex(index) {
-    if (index < COMPOSITION_SEQUENCE.length) {
-      return COMPOSITION_SEQUENCE[index];
+    if (/close-up|close up|detail/.test(prompt)) {
+      weightDuration = 2.5;
+    } else if (/aerial|wide|overview|panorama/.test(prompt)) {
+      weightDuration = 4.5;
     }
-    return index % 2 === 0 ? 'medium' : 'wide';
-  }
 
-  static _normalizeComposition(composition, index) {
-    const normalized = String(composition || '').toLowerCase();
-    if (index < COMPOSITION_SEQUENCE.length) {
-      return COMPOSITION_SEQUENCE[index];
-    }
-    if (normalized.includes('close')) return 'close-up';
-    if (normalized.includes('wide')) return 'wide';
-    return 'medium';
-  }
-
-  static _shotTypeForComposition(composition, storyRole) {
-    if (storyRole === 'hook') return 'dynamic_motion';
-    if (composition === 'wide') return 'wide_aerial';
-    if (composition === 'close-up') return 'close_up';
-    return 'medium_shot';
-  }
-
-  static _durationForRoleAndComposition(storyRole, composition, text = '') {
-    const words = String(text || '').split(/\s+/).filter(Boolean).length;
-    const narrationDuration = Math.max(2, Math.min(6, words * 0.38));
-    if (composition === 'close-up' || storyRole === 'detail') {
-      return Math.max(2, Math.min(3, narrationDuration));
-    }
-    if (composition === 'wide') {
-      return Math.max(4, Math.min(6, narrationDuration + 1));
-    }
-    return Math.max(3, Math.min(4.5, narrationDuration));
-  }
-
-  static _subjectVariation(coreSubjects, index, domain) {
-    const primary = coreSubjects[index % coreSubjects.length] || coreSubjects[0] || 'subject';
-    const secondary = coreSubjects[(index + 1) % coreSubjects.length] || primary;
-    const suffixes = {
-      nature: ['ridge line', 'river bend', 'stone texture', 'mist layer', 'canopy detail'],
-      technology: ['dashboard glow', 'microchip detail', 'data pulse', 'screen reflection', 'network depth'],
-      finance: ['chart momentum', 'ticker screen', 'market floor', 'growth trajectory', 'portfolio detail'],
-      generic: ['hero subject', 'supporting texture', 'foreground layer', 'motion accent', 'environment cue'],
-    };
-    const bank = suffixes[domain] || suffixes.generic;
-    return `${primary} with ${secondary} emphasis, ${bank[index % bank.length]}`;
-  }
-
-  static _cameraMotionForComposition(composition, storyRole) {
-    if (storyRole === 'hook') return 'pan_right';
-    if (composition === 'wide') return 'pan_left';
-    if (composition === 'close-up') return 'zoom_in';
-    return 'static';
-  }
-
-  static _moodForRole(storyRole) {
-    if (storyRole === 'hook') return 'energetic';
-    if (storyRole === 'detail') return 'mysterious';
-    if (storyRole === 'resolution') return 'epic';
-    return 'calm';
-  }
-
-  static _normalizeMood(mood) {
-    const valid = ['epic', 'mysterious', 'energetic', 'calm', 'somber'];
-    const normalized = String(mood || 'calm').toLowerCase();
-    return valid.includes(normalized) ? normalized : 'calm';
+    const narrationDuration = Math.max(2, Math.min(5, wordCount * 0.4));
+    return Math.max(2, Math.min(5, Math.max(narrationDuration, weightDuration)));
   }
 
   static _detectDomain(script) {
@@ -452,39 +349,73 @@ Search queries must remain safe for stock video search and semantically varied.`
     if (/education|learning|school|student|course|training|knowledge/.test(text)) return 'education';
     if (/food|recipe|cooking|restaurant|cuisine|dish|meal/.test(text)) return 'food';
     if (/sport|athlete|game|competition|team|match|championship/.test(text)) return 'sports';
+    if (/entertainment|movie|music|show|comedy|performance|event/.test(text)) return 'entertainment';
+    if (/motivation|inspiration|success|personal growth|achievement|confidence/.test(text)) return 'motivational';
     return 'generic';
   }
 
   static _extractCoreSubjects(script) {
     const rawText = String(script || '').toLowerCase();
-    const cleaned = rawText.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    const filler = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'for', 'with', 'from', 'this', 'that', 'video', 'scene', 'visual']);
-    const words = cleaned.split(' ').filter(Boolean);
-    const found = [];
+    const cleaned = rawText
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    for (let index = 0; index < words.length; index += 1) {
-      const current = words[index];
-      const next = words[index + 1];
+    const filler = new Set([
+      'cinematic', 'beautiful', 'amazing', 'epic', 'stunning', 'dramatic',
+      'the', 'a', 'an', 'and', 'or', 'but', 'for', 'with', 'from', 'into',
+      'over', 'under', 'through', 'about', 'this', 'that', 'these', 'those',
+      'very', 'really', 'just', 'video', 'scene', 'visual', 'story',
+    ]);
+
+    const phrasePatterns = [
+      /\b(stock market|financial growth|market trends|trading screens|data visualization|artificial intelligence|machine learning|software development|digital interface|user interface|travel destination|natural landscape|mountain range|river valley|economic growth|business strategy|cloud computing|robotics system)\b/g,
+    ];
+
+    const found = [];
+    for (const pattern of phrasePatterns) {
+      const matches = cleaned.match(pattern) || [];
+      for (const match of matches) {
+        if (!found.includes(match)) {
+          found.push(match);
+        }
+      }
+    }
+
+    const words = cleaned.split(' ').filter(Boolean);
+    for (let i = 0; i < words.length; i++) {
+      const current = words[i];
+      const next = words[i + 1];
+
       if (filler.has(current) || current.length < 3) {
         continue;
       }
-      const phrase = next && !filler.has(next) && next.length > 2 ? `${current} ${next}` : current;
+
+      const phrase = next && !filler.has(next) && next.length > 2
+        ? `${current} ${next}`
+        : current;
+
       if (!found.includes(phrase)) {
         found.push(phrase);
       }
     }
 
-    return found.slice(0, 5).length ? found.slice(0, 5) : ['core concept'];
+    const meaningful = found
+      .map((item) => item.trim())
+      .filter((item) => item.length > 2 && !filler.has(item))
+      .filter((item, index, arr) => arr.indexOf(item) === index);
+
+    return meaningful.slice(0, 5).length > 0 ? meaningful.slice(0, 5) : ['core concept'];
   }
 
-  static _detectLighting(text, domain, styleName) {
-    const normalized = String(text || '').toLowerCase();
-    const styleProfile = getStyle(styleName);
-    if (/sunrise|dawn|morning/.test(normalized)) return 'golden sunrise';
-    if (/sunset|dusk|evening/.test(normalized)) return 'warm sunset';
-    if (/night|dark|moon|neon/.test(normalized)) return 'night practical glow';
+  static _detectLighting(text, domain) {
+    const t = String(text || '').toLowerCase();
+    if (/sunrise|dawn|morning/.test(t)) return 'golden sunrise';
+    if (/sunset|dusk|evening/.test(t)) return 'warm sunset';
+    if (/night|dark|moon/.test(t)) return 'night ambience';
     if (domain === 'technology') return 'cool digital glow';
-    return styleProfile.lightingProfile || 'natural daylight';
+    if (domain === 'finance') return 'clean professional lighting';
+    return 'natural daylight';
   }
 
   static _normalizeMotion(motion) {
@@ -493,16 +424,56 @@ Search queries must remain safe for stock video search and semantically varied.`
     return valid.includes(normalized) ? normalized : 'static';
   }
 
+  static _normalizeComposition(composition, aspect) {
+    const normalized = String(composition || '').toLowerCase();
+    if (normalized.includes('close-up') || normalized.includes('close up') || normalized.includes('detail')) {
+      return 'close-up detail shot';
+    }
+    if (normalized.includes('wide') || normalized.includes('aerial') || normalized.includes('overview')) {
+      return 'wide overview shot';
+    }
+    if (normalized.includes('medium')) {
+      return 'medium cinematic shot';
+    }
+    return this._compositionForAspect(aspect);
+  }
+
+  static _compositionForAspect(aspect) {
+    if (/overview|outcome/.test(aspect)) return 'wide overview shot';
+    if (/detail|chart|screen|interface|process/.test(aspect)) return 'close-up detail shot';
+    return 'medium cinematic shot';
+  }
+
+  static _resolveSceneAspect(domain, index) {
+    const domainAspects = {
+      finance: ['market overview', 'chart detail', 'trading screen', 'growth concept', 'success outcome'],
+      technology: ['technology overview', 'interface detail', 'data flow', 'AI concept', 'future outcome'],
+      nature: ['environment overview', 'terrain detail', 'natural motion', 'atmospheric texture', 'destination outcome'],
+      health: ['wellness overview', 'body detail', 'movement flow', 'healthy lifestyle', 'fitness goal'],
+      education: ['learning overview', 'knowledge detail', 'teaching moment', 'student perspective', 'mastery outcome'],
+      food: ['food overview', 'ingredient detail', 'cooking process', 'presentation moment', 'taste experience'],
+      sports: ['athlete overview', 'action detail', 'technique moment', 'competition intensity', 'victory outcome'],
+      entertainment: ['performance overview', 'artistic detail', 'emotional moment', 'audience interaction', 'finale outcome'],
+      motivational: ['inspiration overview', 'challenge detail', 'transformation moment', 'breakthrough insight', 'success outcome'],
+      generic: ['topic overview', 'core process', 'key detail', 'contrast moment', 'result outcome'],
+    };
+
+    const aspects = domainAspects[domain] || domainAspects.generic;
+    return aspects[index % aspects.length];
+  }
+
   static _domainVisualDescriptor(domain) {
     const map = {
-      nature: 'landscape depth and natural atmosphere',
-      finance: 'business energy and market symbolism',
-      technology: 'digital abstraction and futuristic systems',
-      health: 'wellness and human vitality',
-      education: 'learning atmosphere and knowledge transfer',
-      food: 'culinary artistry and appetizing texture',
-      sports: 'athletic power and motion intensity',
-      generic: 'polished visual storytelling',
+      nature: 'landscape depth, natural environment, travel atmosphere',
+      finance: 'business energy, market symbolism, data-driven composition',
+      technology: 'digital abstraction, futuristic interface, advanced systems',
+      health: 'wellness energy, vitality, natural human movement',
+      education: 'learning focus, knowledge transfer, educational atmosphere',
+      food: 'culinary artistry, appetizing presentation, flavor essence',
+      sports: 'athletic power, movement dynamics, competitive energy',
+      entertainment: 'artistic expression, emotional resonance, performer presence',
+      motivational: 'inspirational energy, personal growth, transformative moments',
+      generic: 'cinematic visual representation, symbolic storytelling, polished composition',
     };
     return map[domain] || map.generic;
   }

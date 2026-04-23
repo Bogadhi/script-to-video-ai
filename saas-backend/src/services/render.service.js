@@ -1,8 +1,6 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs-extra');
-const AudioService = require('./audio.service');
-const StorageService = require('./storage.service');
 
 const BACKEND_ROOT = path.resolve(__dirname, '..', '..');
 const PROJECTS_ROOT = path.resolve(BACKEND_ROOT, 'projects');
@@ -12,84 +10,26 @@ class RenderService {
         const remotionDir = path.resolve(BACKEND_ROOT, 'remotion');
         const entryFile = path.resolve(remotionDir, 'src', 'index.ts');
         const projectDir = path.resolve(PROJECTS_ROOT, projectId);
-        const finalOutputPath = path.resolve(projectDir, 'final_video.mp4');
+        const propsPath = path.resolve(projectDir, 'props.json');
+        const outputPath = path.resolve(projectDir, 'final_video.mp4');
 
         await fs.ensureDir(projectDir);
 
         const baseUrl = process.env.BASE_URL || 'http://localhost:5002';
-        const sanitizedScenes = await this._sanitizeScenes(projectId, manifest.scenes || []);
-        if (sanitizedScenes.length < 3) {
+
+        if (!manifest.scenes || manifest.scenes.length < 3) {
             throw new Error('Insufficient scenes generated');
         }
 
-        let musicPath = manifest.music_path || '';
-        if (musicPath && !fs.existsSync(musicPath) && !this._isValidHttpUrl(musicPath)) {
-            musicPath = '';
-        }
-
-        const preparedAudio = await AudioService.prepareRenderAudio(projectId, {
-            scenes: sanitizedScenes,
-            musicPath,
-        });
-        const preparedScenes = preparedAudio.scenes || sanitizedScenes;
-        const renderChunks = this._chunkScenes(preparedScenes);
-        const renderedSegments = [];
-        let musicStartFrame = 0;
-
-        for (let chunkIndex = 0; chunkIndex < renderChunks.length; chunkIndex += 1) {
-            const chunkScenes = renderChunks[chunkIndex];
-            const segmentDir = path.resolve(projectDir, 'segments');
-            await fs.ensureDir(segmentDir);
-            const segmentPath = path.resolve(segmentDir, `segment_${String(chunkIndex).padStart(3, '0')}.mp4`);
-
-            if (manifest.metadata?.resume_from_last_chunk !== false && await this._isUsableFile(segmentPath)) {
-                renderedSegments.push(segmentPath);
-                musicStartFrame += this._durationToFrames(chunkScenes.reduce((acc, scene) => acc + (scene.duration || 3), 0));
-                continue;
-            }
-
-            const propsPath = path.resolve(segmentDir, `segment_${String(chunkIndex).padStart(3, '0')}.props.json`);
-            const renderProps = {
-                scenes: chunkScenes.map((scene) => ({
-                    scene_id: scene.scene_id,
-                    image_path: scene.video_path ? null : (scene.image_path || this._blankImageUrl()),
-                    video_path: scene.video_path || '',
-                    audio_path: scene.audio_path || '',
-                    duration: scene.duration,
-                    composition: scene.composition || 'medium',
-                    story_role: scene.story_role || 'development',
-                    shot_type: scene.shot_type || 'medium_shot',
-                    motion: scene.motion || { startScale: 1, endScale: 1.1, xStart: 0, xEnd: 12, yStart: 0, yEnd: -8 },
-                })),
-                musicPath: this._buildMusicUrl(preparedAudio.musicPath || musicPath, baseUrl, projectId),
-                musicStartFrame,
-                showWatermark: Boolean(manifest.metadata?.watermark_required),
-                watermarkText: manifest.metadata?.watermark_required ? 'Bogadhi Free' : '',
-            };
-
-            await fs.writeJSON(propsPath, renderProps, { spaces: 2 });
-            await this._renderSegment(remotionDir, entryFile, propsPath, segmentPath);
-            renderedSegments.push(segmentPath);
-            musicStartFrame += this._durationToFrames(chunkScenes.reduce((acc, scene) => acc + (scene.duration || 3), 0));
-        }
-
-        if (renderedSegments.length === 1) {
-            await fs.copy(renderedSegments[0], finalOutputPath, { overwrite: true });
-        } else {
-            await this._stitchSegments(projectDir, renderedSegments, finalOutputPath);
-        }
-
-        await StorageService.publishArtifact(projectId, finalOutputPath, 'video/mp4');
-        return finalOutputPath;
-    }
-
-    static async _sanitizeScenes(projectId, scenes) {
         const usedAssets = new Set();
         const sanitizedScenes = [];
-        for (const scene of scenes || []) {
+        for (const scene of manifest.scenes || []) {
             const safeScene = { ...scene };
+
             if (!safeScene.narration) safeScene.narration = '';
-            if (typeof safeScene.duration !== 'number' || safeScene.duration <= 0) safeScene.duration = 3;
+            if (typeof safeScene.duration !== 'number' || safeScene.duration <= 0) {
+                safeScene.duration = 3;
+            }
 
             const hasRemoteVideo = this._isValidHttpUrl(safeScene.video_path);
             const hasLocalImage = safeScene.image_path && fs.existsSync(safeScene.image_path);
@@ -101,50 +41,69 @@ class RenderService {
             if (hasRemoteVideo) {
                 safeScene.image_path = null;
             }
+
             if (safeScene.audio_path && !fs.existsSync(safeScene.audio_path)) {
                 safeScene.audio_path = '';
             }
+
             if (safeScene.image_path && !this._isValidHttpUrl(safeScene.image_path)) {
                 await this._waitForFile(safeScene.image_path);
             }
+
             if (safeScene.video_path && !this._isValidHttpUrl(safeScene.video_path)) {
                 await this._waitForFile(safeScene.video_path);
             }
 
-            const assetKey = safeScene.video_path || safeScene.image_path || `placeholder-${safeScene.scene_id}`;
+            const assetKey = safeScene.video_path || safeScene.image_path || 'empty';
             if (usedAssets.has(assetKey)) {
+                console.log('[RENDER DUPLICATE CHECK] detected duplicate asset for scene', safeScene.scene_id, 'creating unique placeholder');
                 safeScene.image_path = await this._createPlaceholder(projectId, safeScene.scene_id);
                 safeScene.video_path = null;
             }
             usedAssets.add(assetKey);
+
+            const sourceType = safeScene.video_path ? 'video' : (safeScene.image_path ? 'image' : 'placeholder');
+            console.log('[RENDER VISUAL]', `scene_id=${safeScene.scene_id} type=${sourceType} path=${safeScene.video_path || safeScene.image_path}`);
             sanitizedScenes.push(safeScene);
         }
-        return sanitizedScenes;
-    }
 
-    static _chunkScenes(scenes) {
-        const chunks = [];
-        let current = [];
-        let currentDuration = 0;
+        console.log('[SANITIZED SCENES]', sanitizedScenes.length);
 
-        for (const scene of scenes) {
-            const duration = Number(scene.duration || 3);
-            if (current.length > 0 && currentDuration + duration > 300) {
-                chunks.push(current);
-                current = [];
-                currentDuration = 0;
-            }
-            current.push(scene);
-            currentDuration += duration;
+        let musicPath = manifest.music_path || '';
+        if (musicPath && !fs.existsSync(musicPath) && !this._isValidHttpUrl(musicPath)) {
+            musicPath = '';
         }
 
-        if (current.length > 0) {
-            chunks.push(current);
-        }
-        return chunks;
-    }
+        const musicUrl = this._buildMusicUrl(musicPath, baseUrl);
 
-    static async _renderSegment(remotionDir, entryFile, propsPath, outputPath) {
+        const totalDuration = sanitizedScenes.reduce((acc, s) => acc + (s.duration || 3), 0);
+        console.log('[TOTAL SCENES]', sanitizedScenes.length);
+        console.log('[TOTAL DURATION]', totalDuration);
+
+        const renderProps = {
+            scenes: sanitizedScenes.map((scene) => {
+                const videoUrl = scene.video_path || '';
+                const imageUrl = scene.image_path || '';
+                
+                const finalVideoUrl = videoUrl || '';
+                const finalImageUrl = finalVideoUrl ? null : (imageUrl || this._blankImageUrl());
+
+                const audioUrl = scene.audio_path || '';
+
+                return {
+                    scene_id: scene.scene_id,
+                    image_path: finalImageUrl,
+                    video_path: finalVideoUrl,
+                    audio_path: audioUrl,
+                    duration: scene.duration,
+                    motion: scene.motion || { startScale: 1, endScale: 1.1, xStart: 0, xEnd: 12, yStart: 0, yEnd: -8 },
+                };
+            }),
+            musicPath: musicUrl,
+        };
+
+        fs.writeFileSync(propsPath, JSON.stringify(renderProps, null, 2), 'utf8');
+
         const args = [
             'remotion',
             'render',
@@ -156,7 +115,7 @@ class RenderService {
             '--bundle-cache=false',
         ];
 
-        await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             const child = spawn('npx', args, {
                 cwd: remotionDir,
                 shell: process.platform === 'win32',
@@ -164,69 +123,44 @@ class RenderService {
             });
 
             let stderr = '';
-            child.stdout.on('data', (chunk) => process.stdout.write(`[Remotion] ${chunk.toString()}`));
+
+            child.stdout.on('data', (chunk) => {
+                process.stdout.write(`[Remotion] ${chunk.toString()}`);
+            });
+
             child.stderr.on('data', (chunk) => {
                 const text = chunk.toString();
                 stderr += text;
                 process.stderr.write(`[Remotion] ${text}`);
             });
-            child.on('error', (error) => reject(new Error(`Failed to start Remotion: ${error.message}`)));
+
+            child.on('error', (err) => {
+                reject(new Error(`Failed to start Remotion: ${err.message}`));
+            });
+
             child.on('close', async (code) => {
                 const exists = await fs.pathExists(outputPath);
-                if (code !== 0 || !exists) {
-                    reject(new Error(`Remotion render failed (${code}). ${stderr.slice(-500)}`));
-                    return;
-                }
-                resolve();
-            });
-        });
-    }
+                const size = exists ? (await fs.stat(outputPath)).size : 0;
 
-    static async _stitchSegments(projectDir, segments, outputPath) {
-        const concatPath = path.resolve(projectDir, 'segments', 'concat.txt');
-        const concatContent = segments.map((segment) => `file '${segment.replace(/'/g, "'\\''")}'`).join('\n');
-        await fs.writeFile(concatPath, concatContent, 'utf8');
-
-        await new Promise((resolve, reject) => {
-            const child = spawn(
-                'ffmpeg',
-                ['-y', '-f', 'concat', '-safe', '0', '-i', concatPath, '-c:v', 'libx264', '-c:a', 'aac', outputPath],
-                {
-                    cwd: projectDir,
-                    shell: process.platform === 'win32',
-                }
-            );
-            let stderr = '';
-            child.stderr.on('data', (chunk) => {
-                stderr += chunk.toString();
-            });
-            child.on('error', (error) => reject(new Error(`Failed to stitch segments: ${error.message}`)));
-            child.on('close', (code) => {
                 if (code !== 0) {
-                    reject(new Error(`Segment stitching failed: ${stderr.slice(-500)}`));
-                    return;
+                    return reject(new Error(`Remotion render failed (exit code ${code}). Last stderr:\n${stderr.slice(-1000)}`));
                 }
-                resolve();
+
+                if (!exists || size === 0) {
+                    return reject(new Error('Remotion exited 0 but no output file was created.'));
+                }
+
+                resolve(outputPath);
             });
         });
-    }
-
-    static _durationToFrames(durationSec, fps = 30) {
-        return Math.floor((durationSec || 0) * fps);
-    }
-
-    static async _isUsableFile(filePath) {
-        if (!await fs.pathExists(filePath)) return false;
-        const stat = await fs.stat(filePath);
-        return stat.size > 0;
     }
 
     static async _waitForFile(filePath, retries = 10, delay = 200) {
-        for (let i = 0; i < retries; i += 1) {
+        for (let i = 0; i < retries; i++) {
             if (filePath && require('fs').existsSync(filePath)) {
                 return true;
             }
-            await new Promise((resolve) => setTimeout(resolve, delay));
+            await new Promise((res) => setTimeout(res, delay));
         }
         return false;
     }
@@ -241,17 +175,25 @@ class RenderService {
         }
     }
 
-    static _buildMusicUrl(musicPath, baseUrl, projectId) {
-        if (this._isValidHttpUrl(musicPath)) return musicPath;
-        if (musicPath && projectId) {
-            const normalized = musicPath.split(path.sep).join('/');
-            const projectIndex = normalized.lastIndexOf(`${projectId}/`);
-            if (projectIndex >= 0) {
-                const relativePath = normalized.slice(projectIndex + projectId.length + 1);
-                return `${baseUrl}/videos/${projectId}/${relativePath}`;
-            }
+    static _buildSceneImageUrl(baseUrl, projectId, imagePath) {
+        if (!imagePath) return '';
+        if (this._isValidHttpUrl(imagePath)) return imagePath;
+        return `${baseUrl}/videos/${projectId}/images/${path.basename(imagePath)}`;
+    }
+
+    static _buildSceneVideoUrl(baseUrl, projectId, videoPath) {
+        if (!videoPath) return '';
+        if (this._isValidHttpUrl(videoPath)) return videoPath;
+        return `${baseUrl}/videos/${projectId}/videos/${path.basename(videoPath)}`;
+    }
+
+    static _buildMusicUrl(musicPath, baseUrl) {
+        if (this._isValidHttpUrl(musicPath)) {
+            return musicPath;
         }
-        if (musicPath && fs.existsSync(musicPath)) return `${baseUrl}/assets/music/${path.basename(musicPath)}`;
+        if (musicPath && fs.existsSync(musicPath)) {
+            return `${baseUrl}/assets/music/${path.basename(musicPath)}`;
+        }
         return `${baseUrl}/assets/music/cinematic.mp3`;
     }
 
@@ -277,6 +219,7 @@ class RenderService {
                 0x44, 0xae, 0x42, 0x60, 0x82,
             ])
         );
+
         return placeholderPath;
     }
 }
